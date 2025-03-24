@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/page_1a"
+        android:title="Page A"
+        android:icon="@drawable/settings_24px"/>
+<!--    choose icon from https://fonts.google.com/icons?icon.size=24&icon.color=%23e3e3e3&icon.platform=android -->
+    <item
+        android:id="@+id/page_1b"
+        android:title="Page B"
+        android:icon="@drawable/settings_24px"/>
+</menu>
