@@ -20,7 +20,7 @@ public class Section2Fragment extends Fragment {
             int itemId = item.getItemId();
 
             if(itemId == R.id.page_2a) {
-                fragment = new DashboardFragment();
+                fragment = new Page1AFragment();
             } else if(itemId == R.id.page_2b) {
                 fragment = new Page1BFragment();
             }
