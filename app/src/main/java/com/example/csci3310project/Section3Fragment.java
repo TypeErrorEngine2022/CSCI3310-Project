@@ -20,9 +20,9 @@ public class Section3Fragment extends Fragment {
             int itemId = item.getItemId();
 
             if(itemId == R.id.page_3a) {
-                fragment = new Page1AFragment();
+                fragment = new Page3AFragment();
             } else if(itemId == R.id.page_3b) {
-                fragment = new Page1BFragment();
+                fragment = new Page3BFragment();
             }
 
             if(fragment != null) {
@@ -37,7 +37,7 @@ public class Section3Fragment extends Fragment {
         // Load initial fragment
         if(savedInstanceState == null) {
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.section_container, new DashboardFragment())
+                    .replace(R.id.section_container, new Page3AFragment())
                     .commit();
         }
 
