@@ -8,6 +8,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
+import com.example.csci3310project.screenTimeTracking.ui.ScreenTimeTrackingFragment;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         // Load default section
         if(savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.content_frame, new Section1Fragment())
+                    .replace(R.id.content_frame, new ScreenTimeTrackingFragment())
                     .commit();
         }
     }
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = null;
 
         if(itemId == R.id.nav_section1) {
-            fragment = new Section1Fragment();
+            fragment = new ScreenTimeTrackingFragment();
         } else if(itemId == R.id.nav_section2) {
             fragment = new Section2Fragment();
         } else if(itemId == R.id.nav_section3) {

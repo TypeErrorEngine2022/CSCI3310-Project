@@ -11,6 +11,6 @@ public class Page3BFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.page1a, container, false);
+        return inflater.inflate(R.layout.section1_dashboard, container, false);
     }
 }

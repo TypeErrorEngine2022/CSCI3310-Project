@@ -5,6 +5,7 @@ import android.view.*;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.csci3310project.screenTimeTracking.ui.DashboardFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class Section2Fragment extends Fragment {
@@ -19,7 +20,7 @@ public class Section2Fragment extends Fragment {
             int itemId = item.getItemId();
 
             if(itemId == R.id.page_2a) {
-                fragment = new Page1AFragment();
+                fragment = new DashboardFragment();
             } else if(itemId == R.id.page_2b) {
                 fragment = new Page1BFragment();
             }
@@ -36,7 +37,7 @@ public class Section2Fragment extends Fragment {
         // Load initial fragment
         if(savedInstanceState == null) {
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.section_container, new Page1AFragment())
+                    .replace(R.id.section_container, new DashboardFragment())
                     .commit();
         }
 
