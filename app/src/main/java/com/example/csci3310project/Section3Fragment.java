@@ -5,6 +5,7 @@ import android.view.*;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.csci3310project.screenTimeTracking.ui.DashboardFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class Section3Fragment extends Fragment {
@@ -36,7 +37,7 @@ public class Section3Fragment extends Fragment {
         // Load initial fragment
         if(savedInstanceState == null) {
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.section_container, new Page1AFragment())
+                    .replace(R.id.section_container, new DashboardFragment())
                     .commit();
         }
 
