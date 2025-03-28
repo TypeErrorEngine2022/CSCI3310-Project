@@ -20,9 +20,9 @@ public class Section2Fragment extends Fragment {
             int itemId = item.getItemId();
 
             if(itemId == R.id.page_2a) {
-                fragment = new Page1AFragment();
+                fragment = new Page2AFragment();
             } else if(itemId == R.id.page_2b) {
-                fragment = new Page1BFragment();
+                fragment = new Page2BFragment();
             }
 
             if(fragment != null) {
@@ -37,7 +37,7 @@ public class Section2Fragment extends Fragment {
         // Load initial fragment
         if(savedInstanceState == null) {
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.section_container, new DashboardFragment())
+                    .replace(R.id.section_container, new Page2AFragment())
                     .commit();
         }
 
