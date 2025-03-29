@@ -1,5 +1,6 @@
 package com.example.csci3310project.screenTimeTracking.ui;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,11 @@ import com.example.csci3310project.screenTimeTracking.data.UsageEntity;
 
 import java.util.List;
 
-public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.ViewHolder> {
+/**
+ * Reference: https://www.youtube.com/watch?v=Mc0XT58A1Z4
+ */
+
+public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.UsageStatsViewHolder> {
     private List<UsageEntity> usageStatsList;
 
     public UsageStatsAdapter(List<UsageEntity> usageStatsList) {
@@ -22,14 +27,15 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Vi
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public UsageStatsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.section1_usage_stats_item, parent, false);
-        return new ViewHolder(view);
+        return new UsageStatsViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull UsageStatsViewHolder holder, int position) {
         UsageEntity usageEntity = usageStatsList.get(position);
         holder.packageNameTextView.setText("Package: " + usageEntity.packageName);
         holder.timeTextView.setText("Time: " + usageEntity.totalMsInForeground / 1000 + " seconds");
@@ -40,11 +46,11 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Vi
         return usageStatsList.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class UsageStatsViewHolder extends RecyclerView.ViewHolder {
         public TextView packageNameTextView;
         public TextView timeTextView;
 
-        public ViewHolder(View view) {
+        public UsageStatsViewHolder(View view) {
             super(view);
             packageNameTextView = view.findViewById(R.id.package_name);
             timeTextView = view.findViewById(R.id.time);
