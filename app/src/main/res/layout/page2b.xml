@@ -1,0 +1,62 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Productivity Software Settings -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Productivity Software"
+        android:textStyle="bold"
+        android:paddingTop="8dp"/>
+
+    <EditText
+        android:id="@+id/productivity_work_duration_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Work Duration (in minutes)"
+        android:inputType="numberDecimal"
+        android:text="60"/>
+
+    <EditText
+        android:id="@+id/productivity_break_duration_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Break Duration (in minutes)"
+        android:inputType="numberDecimal"
+        android:text="30"/>
+
+    <!-- Entertainment Software Settings -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entertainment Software"
+        android:textStyle="bold"
+        android:paddingTop="16dp"/>
+
+    <EditText
+        android:id="@+id/entertainment_work_duration_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Work Duration (in minutes)"
+        android:inputType="numberDecimal"
+        android:text="30"/>
+
+    <EditText
+        android:id="@+id/entertainment_break_duration_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Break Duration (in minutes)"
+        android:inputType="numberDecimal"
+        android:text="10"/>
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
