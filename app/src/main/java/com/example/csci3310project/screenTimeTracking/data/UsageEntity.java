@@ -17,6 +17,9 @@ public class UsageEntity {
     @ColumnInfo(name = "total_ms_in_foreground")
     public long totalMsInForeground;
 
+    @ColumnInfo(name = "app_icon_uri")
+    public String appIconUri;
+
     public UsageEntity() {
         this.packageName = "";
         this.totalMsInForeground = 0;
