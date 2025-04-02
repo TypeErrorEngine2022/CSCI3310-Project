@@ -3,6 +3,7 @@ package com.example.csci3310project.screenTimeTracking.ui;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -57,18 +58,29 @@ public class ScreenTimeTrackingFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (hasUsagePermission()) {
+        if (!hasUsagePermission()) {
+            Log.d("Section1Fragment", "Usage permission not granted, now requesting");
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+            builder.setTitle("Permission Required");
+            builder.setMessage("Please enable usage access permission to use the screen tracking feature.");
+            builder.setPositiveButton("Confirm", (dialog, which) -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+            builder.show();
+        } else {
             Log.d("Section1Fragment", "Usage permission granted");
-            return;
         }
 
-        Log.d("Section1Fragment", "Usage permission not granted, now requesting");
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
-        builder.setTitle("Permission Required");
-        builder.setMessage("Please enable usage access permission to use the screen tracking feature.");
-        builder.setPositiveButton("Confirm", (dialog, which) -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
+        if (!hasQueryAllPackagesPermission()) {
+            Log.d("Section1Fragment", "QUERY_ALL_PACKAGES permission not granted, now requesting");
+            AlertDialog.Builder builder2 = new AlertDialog.Builder(requireActivity());
+            builder2.setTitle("Permission Required");
+            builder2.setMessage("Please enable QUERY_ALL_PACKAGES permission to use the screen tracking feature.");
+            builder2.setPositiveButton("Confirm", (dialog, which) -> startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)));
+            builder2.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+            builder2.show();
+        } else {
+            Log.d("Section1Fragment", "QUERY_ALL_PACKAGES permission granted");
+        }
     }
 
     private boolean hasUsagePermission() {
@@ -76,5 +88,9 @@ public class ScreenTimeTrackingFragment extends Fragment {
         AppOpsManager appOps = (AppOpsManager) requireActivity().getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getActivity().getPackageName());
         return mode == AppOpsManager.MODE_ALLOWED;
+    }
+
+    private boolean hasQueryAllPackagesPermission() {
+        return requireActivity().checkSelfPermission("android.permission.QUERY_ALL_PACKAGES") == PackageManager.PERMISSION_GRANTED;
     }
 }

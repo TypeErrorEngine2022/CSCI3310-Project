@@ -4,13 +4,13 @@ import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci3310project.R;
-import com.example.csci3310project.screenTimeTracking.data.UsageEntity;
 
 import java.util.List;
 
@@ -19,9 +19,9 @@ import java.util.List;
  */
 
 public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.UsageStatsViewHolder> {
-    private List<UsageEntity> usageStatsList;
+    private List<UsageStatUIModel> usageStatsList;
 
-    public UsageStatsAdapter(List<UsageEntity> usageStatsList) {
+    public UsageStatsAdapter(List<UsageStatUIModel> usageStatsList) {
         this.usageStatsList = usageStatsList;
     }
 
@@ -36,9 +36,10 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull UsageStatsViewHolder holder, int position) {
-        UsageEntity usageEntity = usageStatsList.get(position);
-        holder.packageNameTextView.setText("Package: " + usageEntity.packageName);
-        holder.timeTextView.setText("Time: " + usageEntity.totalMsInForeground / 1000 + " seconds");
+        UsageStatUIModel UsageStatUIModel = usageStatsList.get(position);
+        holder.packageNameTextView.setText(UsageStatUIModel.getPackageName());
+        holder.timeTextView.setText(UsageStatUIModel.getTotalMsInForeground() / 1000 + " seconds");
+        holder.appIconImageView.setImageDrawable(UsageStatUIModel.getAppIcon());
     }
 
     @Override
@@ -50,10 +51,13 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
         public TextView packageNameTextView;
         public TextView timeTextView;
 
+        public ImageView appIconImageView;
+
         public UsageStatsViewHolder(View view) {
             super(view);
             packageNameTextView = view.findViewById(R.id.package_name);
             timeTextView = view.findViewById(R.id.time);
+            appIconImageView = view.findViewById(R.id.app_icon);
         }
     }
 }
