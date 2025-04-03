@@ -14,9 +14,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.example.csci3310project.Page1BFragment;
 import com.example.csci3310project.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.Objects;
 
 public class ScreenTimeTrackingFragment extends Fragment {
     @Override
@@ -32,7 +33,7 @@ public class ScreenTimeTrackingFragment extends Fragment {
             if(itemId == R.id.page_1a) {
                 fragment = new DashboardFragment();
             } else if(itemId == R.id.page_1b) {
-                fragment = new Page1BFragment();
+                fragment = new RewardFragment();
             }
 
             if(fragment != null) {
@@ -85,9 +86,14 @@ public class ScreenTimeTrackingFragment extends Fragment {
 
     private boolean hasUsagePermission() {
         // Check if the PACKAGE_USAGE_STATS permission is granted
-        AppOpsManager appOps = (AppOpsManager) requireActivity().getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getActivity().getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
+        try {
+            AppOpsManager appOps = (AppOpsManager) requireActivity().getSystemService(Context.APP_OPS_SERVICE);
+            int mode = appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), requireActivity().getPackageName());
+            return mode == AppOpsManager.MODE_ALLOWED;
+        } catch (Exception e) {
+            Log.e("Section1Fragment", "Error checking usage permission", e);
+            return false;
+        }
     }
 
     private boolean hasQueryAllPackagesPermission() {
