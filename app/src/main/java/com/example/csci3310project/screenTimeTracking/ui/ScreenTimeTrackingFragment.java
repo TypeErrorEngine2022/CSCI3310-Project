@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment;
 import com.example.csci3310project.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.util.Objects;
 
 public class ScreenTimeTrackingFragment extends Fragment {
     @Override
