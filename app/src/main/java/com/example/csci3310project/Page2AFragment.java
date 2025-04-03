@@ -7,6 +7,7 @@ import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.RingtoneManager;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
+import com.example.csci3310project.TimeBreakUtils.MonitoringService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -148,26 +150,33 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             isMonitoring = true;
             textView.setText("Monitoring started...");
 
+            // 改為直接在用戶點擊按鈕時啟動服務，而不是在線程中
+            Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
+            serviceIntent.putExtra("appName", "Starting monitoring...");
+            serviceIntent.putExtra("appType", "Initializing");
+            serviceIntent.putExtra("startTime", System.currentTimeMillis());
+            getActivity().startForegroundService(serviceIntent); // 使用 startForegroundService 代替 startService
+
             monitoringThread = new Thread(() -> {
                 while (isMonitoring) {
                     try {
-                        // Get current foreground app
                         String foregroundApp = getCurrentForegroundApp();
 
                         if (foregroundApp != null && !foregroundApp.equals(getActivity().getPackageName())) {
-                            // If app changed, reset timer
                             if (!foregroundApp.equals(currentForegroundApp)) {
                                 handleAppSwitch(foregroundApp);
+
+                                // 使用 updateNotification 方法而不是重新啟動服務
+                                Intent updateIntent = new Intent(getActivity(), MonitoringService.class);
+                                updateIntent.setAction("UPDATE_NOTIFICATION");
+                                updateIntent.putExtra("appName", getAppName(foregroundApp));
+                                updateIntent.putExtra("appType", getAppType(foregroundApp));
+                                updateIntent.putExtra("startTime", appUsageStartTime);
+                                getActivity().startService(updateIntent);
                             }
-
-                            // Check if we need to show break reminder
-                            checkForBreakTime(foregroundApp);
-
-                            // Update the UI
-                            updateUI(foregroundApp);
                         }
 
-                        Thread.sleep(1000); // Check every second
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         Log.e(TAG, "Monitoring thread interrupted", e);
                     }
@@ -188,6 +197,10 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             }
             isInBreak = false;
             textView.setText("Monitoring stopped");
+
+            // 停止前台服务
+            Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
+            getActivity().stopService(serviceIntent);
         }
     }
 
@@ -216,7 +229,6 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     }
 
     private void handleAppSwitch(String newApp) {
-        // Reset timers when switching apps
         currentForegroundApp = newApp;
         appUsageStartTime = System.currentTimeMillis();
         isInBreak = false;
@@ -225,7 +237,13 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             breakTimer.cancel();
         }
 
-        // Log the app switch
+        // 更新前台服务通知
+        Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
+        serviceIntent.putExtra("appName", getAppName(newApp));
+        serviceIntent.putExtra("appType", getAppType(newApp));
+        serviceIntent.putExtra("startTime", appUsageStartTime);
+        getActivity().startService(serviceIntent);
+
         getActivity().runOnUiThread(() -> {
             textView.setText("Now using: " + getAppName(newApp) + "\nType: " + getAppType(newApp));
         });
