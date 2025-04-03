@@ -3,10 +3,10 @@ package com.example.csci3310project.screenTimeTracking.ui;
 import android.graphics.drawable.Drawable;
 
 public class UsageStatUIModel {
-    private String packageName;
-    private long totalMsInForeground;
+    private final String packageName;
+    private final long totalMsInForeground;
 
-    Drawable appIcon;
+    private final Drawable appIcon;
 
     public UsageStatUIModel(String packageName, long totalMsInForeground, Drawable appIcon) {
         this.packageName = packageName;
@@ -18,23 +18,11 @@ public class UsageStatUIModel {
         return packageName;
     }
 
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
-
     public long getTotalMsInForeground() {
         return totalMsInForeground;
     }
 
-    public void setTotalMsInForeground(long totalMsInForeground) {
-        this.totalMsInForeground = totalMsInForeground;
-    }
-
     public Drawable getAppIcon() {
         return appIcon;
-    }
-
-    public void setAppIcon(Drawable appIcon) {
-        this.appIcon = appIcon;
     }
 }

@@ -15,7 +15,7 @@ import com.example.csci3310project.R;
 import java.util.List;
 
 /**
- * Reference: https://www.youtube.com/watch?v=Mc0XT58A1Z4
+ * Reference: RecyclerView | Everything You Need to Know https://www.youtube.com/watch?v=Mc0XT58A1Z4
  */
 
 public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.UsageStatsViewHolder> {
@@ -33,13 +33,34 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
         return new UsageStatsViewHolder(view);
     }
 
+    // use hours, minutes, seconds, omit the zero prefix.
+    // eg. 0 hour 0 minute 5 seconds -> 5 seconds, 0 hour 1 minute 5 seconds -> 1 minute 5 seconds
+    private String formatTime(long totalMsInForeground) {
+        long seconds = (totalMsInForeground / 1000) % 60;
+        long minutes = (totalMsInForeground / (1000 * 60)) % 60;
+        long hours = (totalMsInForeground / (1000 * 60 * 60)) % 24;
+
+        StringBuilder timeBuilder = new StringBuilder();
+        if (hours > 0) {
+            timeBuilder.append(hours).append(" hour ");
+        }
+        if (minutes > 0) {
+            timeBuilder.append(minutes).append(" minute ");
+        }
+        if (seconds > 0) {
+            timeBuilder.append(seconds).append(" seconds");
+        }
+        return timeBuilder.toString();
+    }
+
+
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull UsageStatsViewHolder holder, int position) {
-        UsageStatUIModel UsageStatUIModel = usageStatsList.get(position);
-        holder.packageNameTextView.setText(UsageStatUIModel.getPackageName());
-        holder.timeTextView.setText(UsageStatUIModel.getTotalMsInForeground() / 1000 + " seconds");
-        holder.appIconImageView.setImageDrawable(UsageStatUIModel.getAppIcon());
+        UsageStatUIModel usageStatUIModel = usageStatsList.get(position);
+        holder.packageNameTextView.setText(usageStatUIModel.getPackageName());
+        holder.timeTextView.setText(formatTime(usageStatUIModel.getTotalMsInForeground()));
+        holder.appIconImageView.setImageDrawable(usageStatUIModel.getAppIcon());
     }
 
     @Override
