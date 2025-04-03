@@ -49,12 +49,15 @@ public class AppClassifier {
             Log.e("AppClassifier", "LLM model not initialized");
             return "Unable to generate comment, please check model settings.";
         }
-        StringBuilder prompt = new StringBuilder("Assume the user's current usage time in the format [app, hours] is as follows:\n{");
+        StringBuilder prompt = new StringBuilder("Assume the user's current usage time in the format [app, time] is as follows:\n{");
         UsageStatsUseCase usageStatsUseCase = new UsageStatsUseCase(new UsageRepository(new UsageStatsDataSource(context)), context);
         List<UsageStatUIModel> usageStatsData = usageStatsUseCase.getDailyUsageStats();
         for (UsageStatUIModel usageStat : usageStatsData) {
-            long hours = usageStat.getTotalMsInForeground() / 3600000;  // Convert ms to hours
-            prompt.append(usageStat.getPackageName()).append(" ").append(hours).append(",");
+            prompt
+                    .append(usageStat.getPackageName())
+                    .append(" ")
+                    .append(usageStat.getFormattedTime())
+                    .append(",");
         }
         prompt.setLength(prompt.length() - 1);  // Remove last comma
         prompt.append("}\nGenerate a comment about the user's productivity. If the user can be more efficient, use positive encouragement; otherwise, encourage the user. The comment should be less than 100 words.");

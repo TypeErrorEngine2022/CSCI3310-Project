@@ -19,7 +19,7 @@ import java.util.List;
  */
 
 public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.UsageStatsViewHolder> {
-    private List<UsageStatUIModel> usageStatsList;
+    private final List<UsageStatUIModel> usageStatsList;
 
     public UsageStatsAdapter(List<UsageStatUIModel> usageStatsList) {
         this.usageStatsList = usageStatsList;
@@ -33,33 +33,12 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
         return new UsageStatsViewHolder(view);
     }
 
-    // use hours, minutes, seconds, omit the zero prefix.
-    // eg. 0 hour 0 minute 5 seconds -> 5 seconds, 0 hour 1 minute 5 seconds -> 1 minute 5 seconds
-    private String formatTime(long totalMsInForeground) {
-        long seconds = (totalMsInForeground / 1000) % 60;
-        long minutes = (totalMsInForeground / (1000 * 60)) % 60;
-        long hours = (totalMsInForeground / (1000 * 60 * 60)) % 24;
-
-        StringBuilder timeBuilder = new StringBuilder();
-        if (hours > 0) {
-            timeBuilder.append(hours).append(" hour ");
-        }
-        if (minutes > 0) {
-            timeBuilder.append(minutes).append(" minute ");
-        }
-        if (seconds > 0) {
-            timeBuilder.append(seconds).append(" seconds");
-        }
-        return timeBuilder.toString();
-    }
-
-
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull UsageStatsViewHolder holder, int position) {
         UsageStatUIModel usageStatUIModel = usageStatsList.get(position);
         holder.packageNameTextView.setText(usageStatUIModel.getPackageName());
-        holder.timeTextView.setText(formatTime(usageStatUIModel.getTotalMsInForeground()));
+        holder.timeTextView.setText(usageStatUIModel.getFormattedTime());
         holder.appIconImageView.setImageDrawable(usageStatUIModel.getAppIcon());
     }
 
