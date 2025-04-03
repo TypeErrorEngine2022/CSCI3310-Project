@@ -21,9 +21,17 @@ public class UsageStatsUseCase {
         this.context = context;
     }
 
+    // Reference: Android应用层PackageManager的使用 https://www.cnblogs.com/dony-c/p/9478115.html
     private String getAppName(UsageStats entity) {
-        String[] names = entity.getPackageName().split("\\.");
-        return names[names.length - 1];
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            return packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(entity.getPackageName(), PackageManager.GET_META_DATA)
+            ).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("UsageStatsUseCase", "Package not found: " + entity.getPackageName(), e);
+            return entity.getPackageName(); // Fallback to package name if app name is not found
+        }
     }
 
     // reference: https://stackoverflow.com/questions/17985500/how-can-i-get-the-applications-icon-from-the-package-name
