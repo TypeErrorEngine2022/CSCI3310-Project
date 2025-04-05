@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         if(savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.content_frame, new ScreenTimeTrackingFragment())
+                    .addToBackStack(null)
                     .commit();
         }
     }
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         if(fragment != null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.content_frame, fragment)
+                    .addToBackStack(null)
                     .commit();
         }
 
