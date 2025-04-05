@@ -20,13 +20,19 @@ public class UsageEntity {
     @ColumnInfo(name = "app_icon_uri")
     public String appIconUri;
 
+    @ColumnInfo(name = "app_category")
+    @NonNull
+    public String app_category;
+
     public UsageEntity() {
         this.packageName = "";
         this.totalMsInForeground = 0;
+        this.app_category = "unclassified";
     }
 
     public UsageEntity(@NonNull String packageName, long totalMsInForeground) {
         this.packageName = packageName;
         this.totalMsInForeground = totalMsInForeground;
+        this.app_category = "unclassified";
     }
 }

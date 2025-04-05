@@ -13,8 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.csci3310project.R;
+import com.example.csci3310project.screenTimeTracking.domain.AppClassificationWorker;
+import com.example.csci3310project.screenTimeTracking.domain.LlmInferenceManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 
@@ -80,7 +85,26 @@ public class ScreenTimeTrackingFragment extends Fragment {
             builder2.show();
         } else {
             Log.d("Section1Fragment", "QUERY_ALL_PACKAGES permission granted");
+            Log.d("Section1Fragment", "App classification started");
+            startAppClassification();
         }
+    }
+
+    private void startAppClassification() {
+        // Initialize LLM manager to ensure model is loaded
+        LlmInferenceManager.getInstance(requireContext());
+
+        // Schedule app classification work
+        OneTimeWorkRequest classificationWork = new OneTimeWorkRequest.Builder(AppClassificationWorker.class)
+                .build();
+
+        WorkManager.getInstance(requireContext())
+                .enqueueUniqueWork(
+                        "app_classification_work",
+                        ExistingWorkPolicy.KEEP,
+                        classificationWork);
+
+        Log.d("ScreenTimeTrackingFragment", "App classification work scheduled");
     }
 
     private boolean hasUsagePermission() {
