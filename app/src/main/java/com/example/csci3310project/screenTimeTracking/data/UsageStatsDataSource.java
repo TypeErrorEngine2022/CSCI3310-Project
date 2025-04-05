@@ -3,7 +3,6 @@ package com.example.csci3310project.screenTimeTracking.data;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
-import android.util.Log;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

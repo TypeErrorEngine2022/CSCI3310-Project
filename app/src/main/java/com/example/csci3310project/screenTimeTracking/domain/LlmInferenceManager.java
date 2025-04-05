@@ -1,5 +1,6 @@
 package com.example.csci3310project.screenTimeTracking.domain;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
@@ -9,6 +10,7 @@ import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkContinuation;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -32,6 +34,8 @@ public class LlmInferenceManager {
 
     // Thread-safe map to store callbacks for each inference request
     private final ConcurrentHashMap<UUID, ResponseCallback> callbackMap = new ConcurrentHashMap<>();
+
+    private WorkContinuation currentChain;
 
     private LlmInferenceManager(Context context) {
         this.appContext = context.getApplicationContext();
@@ -72,16 +76,21 @@ public class LlmInferenceManager {
                         ExistingWorkPolicy.KEEP,
                         initRequest);
 
-        WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(initRequest.getId())
-                .observeForever(workInfo -> {
-                    if (workInfo != null) {
-                        boolean isSuccess = workInfo.getState() == WorkInfo.State.SUCCEEDED;
-                        modelReadyState.postValue(isSuccess);
-                        Log.d(TAG, "Model initialization " + (isSuccess ? "succeeded" : "failed"));
-                    }
-                });
+        // Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
+        // Use main thread for LiveData operations
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mainHandler.post(() -> {
+            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(initRequest.getId())
+                    .observeForever(workInfo -> {
+                        if (workInfo != null && workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                            modelReadyState.postValue(true);
+                            Log.d(TAG, "Model initialization succeeded");
+                        }
+                    });
+        });
     }
 
+    @SuppressLint("EnqueueWork")
     public void generateResponseAsync(String prompt, ResponseCallback callback) {
         if (!Boolean.TRUE.equals(modelReadyState.getValue())) {
             callback.onError("Model not initialized yet");
@@ -99,25 +108,48 @@ public class LlmInferenceManager {
         // Store the callback to retrieve it when work is complete
         callbackMap.put(inferenceRequest.getId(), callback);
 
+        // This is to ensure that the inference requests are executed in order
+        // LLM cannot be used in parallel
+        synchronized (this) {
+            if (currentChain == null) {
+                currentChain = WorkManager.getInstance(appContext).beginWith(inferenceRequest);
+            } else {
+                currentChain = currentChain.then(inferenceRequest);
+            }
+
+            currentChain.enqueue();
+        }
+
         // Observe work result to deliver back to callback
         // each generateResponseAsync will create a new work request and observe that request
-        WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
-                .observeForever(workInfo -> {
-                    if (workInfo == null) return;
+        // Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
+        // Use main thread for LiveData operations
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mainHandler.post(() -> {
+            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
+                    .observeForever(workInfo -> {
+                        if (workInfo == null) return;
 
-                    if (workInfo.getState().isFinished()) {
-                        ResponseCallback storedCallback = callbackMap.remove(inferenceRequest.getId());
-                        if (storedCallback != null) {
-                            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                                String result = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_RESULT);
-                                storedCallback.onResponse(result != null ? result : "No response generated");
-                            } else if (workInfo.getState() == WorkInfo.State.FAILED) {
-                                String error = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_ERROR);
-                                storedCallback.onError(error != null ? error : "Unknown error");
+                        if (workInfo.getState().isFinished()) {
+                            ResponseCallback storedCallback = callbackMap.remove(inferenceRequest.getId());
+
+                            // Reference: Android --- observer和observerForever的区别 https://blog.csdn.net/qq_43290288/article/details/141862177
+                            // Clean up observer to prevent leaks
+                            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
+                                    .removeObserver(observer -> {});
+
+                            if (storedCallback != null) {
+                                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                                    String result = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_RESULT);
+                                    storedCallback.onResponse(result != null ? result : "No response generated");
+                                } else if (workInfo.getState() == WorkInfo.State.FAILED) {
+                                    String error = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_ERROR);
+                                    storedCallback.onError(error != null ? error : "Unknown error");
+                                }
                             }
                         }
-                    }
-                });
+                    });
+        });
 
         WorkManager.getInstance(appContext).enqueue(inferenceRequest);
     }
