@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -27,6 +28,8 @@ public class RewardFragment extends Fragment {
 
     private TextView outputTextView;
     private ProgressBar progressBar;
+
+    private Button retryButton;
     private final AtomicBoolean isGeneratingComment = new AtomicBoolean(false);
     private LlmInferenceManager llmInferenceManager;
     private String resultReceivedWhilePaused = null;
@@ -38,7 +41,8 @@ public class RewardFragment extends Fragment {
 
         outputTextView = view.findViewById(R.id.reward_output_text);
         progressBar = view.findViewById(R.id.progress_bar);
-        
+        retryButton = view.findViewById(R.id.reward_retry_button);
+
         llmInferenceManager = LlmInferenceManager.getInstance(requireContext());
 
         // Only generate comment if the model is ready and not already generating
@@ -47,7 +51,7 @@ public class RewardFragment extends Fragment {
                 generateComment();
             }
         });
-        
+
         showLoading("Initializing AI model...");
 
         Log.d(TAG, "onCreateView");
@@ -57,6 +61,12 @@ public class RewardFragment extends Fragment {
             generateComment();
         }
 
+        retryButton.setOnClickListener(v -> {
+            outputTextView.setText("");
+            showLoading("Getting your personalized analysis...");
+            generateComment();
+        });
+
         return view;
     }
 
@@ -64,11 +74,12 @@ public class RewardFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         outputTextView.setText(message);
     }
-    
+
     private void hideLoading() {
         progressBar.setVisibility(View.GONE);
     }
-    
+
+    @SuppressLint("SetTextI18n")
     private void generateComment() {
         // Prevent multiple simultaneous calls
         // getAndSet returns the previous value and sets it to a new value
@@ -84,44 +95,49 @@ public class RewardFragment extends Fragment {
             isGeneratingComment.set(false);
             return;
         }
-        
+
+        // if user go back and forth between fragments, we need to prevent sending multiple inference requests
+        if (!CommentManager.isCommentRequestAllowed(requireContext())) {
+            // do nothing, the last request will update the UI when it is done
+            isGeneratingComment.set(true);
+            return;
+        }
+
+        CommentManager.setCommentRequestTimestamp(requireContext());
+
         showLoading("Getting your personalized analysis...");
-        
+
         StringBuilder prompt = getPrompt(requireContext());
         Log.d(TAG, "Prompt: " + prompt);
-        
+
         llmInferenceManager.generateResponseAsync(prompt.toString(), new LlmInferenceManager.ResponseCallback() {
             @Override
             public void onResponse(String response) {
+                Context appContext = llmInferenceManager.getAppContext();
+                CommentManager.saveComment(appContext, response);
                 // Fragment is visible, update UI directly
                 if (isAdded() && isResumed()) {
                     requireActivity().runOnUiThread(() -> {
                         hideLoading();
                         outputTextView.setText(response);
                         isGeneratingComment.set(false);
+                        retryButton.setVisibility(View.GONE);
                     });
                 }
-
-                // Regardless of visibility, save the comment
-                // So, even if the fragment is not visible, the comment will be saved for later use
-                CommentManager.saveComment(requireContext(), response);
             }
 
             @SuppressLint("SetTextI18n")
             @Override
             public void onError(String errorMessage) {
-                // Fragment is visible, update UI directly
-                if (isAdded() && isResumed()) {
+                // these are not ui related, so we can directly run them
+                isGeneratingComment.set(false);
+                resultReceivedWhilePaused = "ERROR: " + errorMessage;
+
+                if (isAdded() && isResumed()) { // Fragment is visible, update UI directly
                     requireActivity().runOnUiThread(() -> {
                         hideLoading();
                         outputTextView.setText("Sorry, couldn't generate analysis: " + errorMessage);
-                        isGeneratingComment.set(false);
-                    });
-                } else if (isAdded()) { // Fragment exists but is not visible, store error for later
-                    requireActivity().runOnUiThread(() -> {
-                        // Store error message in resultReceivedWhilePaused with error prefix
-                        resultReceivedWhilePaused = "ERROR: " + errorMessage;
-                        isGeneratingComment.set(false);
+                        retryButton.setVisibility(View.VISIBLE);
                     });
                 }
 
