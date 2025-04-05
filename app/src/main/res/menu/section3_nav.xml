@@ -1,11 +1,13 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
     <item
         android:id="@+id/page_3a"
-        android:title="Page A"
+        android:title="Page 3A"
         android:icon="@drawable/settings_24px"/>
     <!--    choose icon from https://fonts.google.com/icons?icon.size=24&icon.color=%23e3e3e3&icon.platform=android -->
     <item
         android:id="@+id/page_3b"
-        android:title="Page B"
+        android:title="Page 3B"
         android:icon="@drawable/settings_24px"/>
 </menu>
