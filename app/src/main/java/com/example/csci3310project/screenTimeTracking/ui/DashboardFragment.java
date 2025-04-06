@@ -43,14 +43,14 @@ public class DashboardFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         DashboardViewModel viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        adapter = new UsageStatsAdapter(new ArrayList<>());
+        usageStatsRecyclerView.setAdapter(adapter);
 
         // the reason to observer usage stat, instead of getting static list
         // because the background service will classify the app, which will update the item
         viewModel.getUsageStats().observe(getViewLifecycleOwner(), usageStats -> {
             showLoading(false);
-            adapter = new UsageStatsAdapter(usageStats);
-            RecyclerView usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
-            usageStatsRecyclerView.setAdapter(adapter);
+            adapter.updateData(usageStats);
         });
     }
 
