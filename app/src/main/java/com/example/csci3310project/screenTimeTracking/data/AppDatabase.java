@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// Reference: Android Room 資料庫使用方法 https://blog.tarswork.com/post/android-storage-using-room
+// My Reference: Android Room 資料庫使用方法 https://blog.tarswork.com/post/android-storage-using-room
 
 @Database(entities = {UsageEntity.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {

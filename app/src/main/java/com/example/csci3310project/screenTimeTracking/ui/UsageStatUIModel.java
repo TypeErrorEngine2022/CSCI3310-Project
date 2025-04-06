@@ -3,26 +3,23 @@ package com.example.csci3310project.screenTimeTracking.ui;
 import android.graphics.drawable.Drawable;
 
 public class UsageStatUIModel {
-    private final String packageName;
-    private final long totalMsInForeground;
+    private final String appName;
 
     private final Drawable appIcon;
 
     private final String formattedTime;
 
-    public UsageStatUIModel(String packageName, long totalMsInForeground, Drawable appIcon) {
-        this.packageName = packageName;
-        this.totalMsInForeground = totalMsInForeground;
+    private final boolean isProductive;
+
+    public UsageStatUIModel(String appName, long totalMsInForeground, Drawable appIcon, boolean isProductive) {
+        this.appName = appName;
         this.appIcon = appIcon;
         this.formattedTime = formatTime(totalMsInForeground);
+        this.isProductive = isProductive;
     }
 
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public long getTotalMsInForeground() {
-        return totalMsInForeground;
+    public String getAppName() {
+        return appName;
     }
 
     public Drawable getAppIcon() {
@@ -51,5 +48,9 @@ public class UsageStatUIModel {
 
     public String getFormattedTime() {
         return formattedTime;
+    }
+
+    public boolean isProductive() {
+        return isProductive;
     }
 }
