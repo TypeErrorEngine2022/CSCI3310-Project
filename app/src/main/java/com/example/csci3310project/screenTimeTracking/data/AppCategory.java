@@ -1,9 +1,9 @@
 package com.example.csci3310project.screenTimeTracking.data;
 
 public enum AppCategory {
-    PRODUCTIVE("productive"),
-    NON_PRODUCTIVE("non-productive"),
-    UNCLASSIFIED("unclassified");
+    PRODUCTIVE("PRODUCTIVE"),
+    NON_PRODUCTIVE("NON_PRODUCTIVE"),
+    UNCLASSIFIED("UNCLASSIFIED");
 
     private final String value;
 
