@@ -52,6 +52,7 @@ public class UsageStatsUseCase {
     }
 
     public LiveData<List<UsageStatUIModel>> getUsageStatsLiveData() {
+        // My reference: Day 15 LiveData 介紹與使用 https://ithelp.ithome.com.tw/articles/10222799?sc=rss.iron
         return Transformations.map(usageRepository.getAllAppsLiveData(), usageEntities -> {
             List<UsageStats> rawStats = getProcessUsageStats();
             List<UsageStatUIModel> result = new ArrayList<>();
