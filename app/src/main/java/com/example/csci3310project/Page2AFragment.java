@@ -148,17 +148,17 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                     (entBreakDuration/60000) + "min, Productivity break: " +
                     (prodBreakDuration/60000) + "min");
 
-            // 啟動前台服務
+
             Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
             serviceIntent.putExtra("appName", "Starting monitoring...");
             serviceIntent.putExtra("appType", "Initializing");
             serviceIntent.putExtra("startTime", System.currentTimeMillis());
-            serviceIntent.putExtra("workDuration", (long) 30 * 60 * 1000); // 默認30分鐘
+            serviceIntent.putExtra("workDuration", (long) 30 * 60 * 1000);
             serviceIntent.putExtra("entertainmentBreakDuration", parentFragment.getEntertainmentBreakDuration());
             serviceIntent.putExtra("productivityBreakDuration", parentFragment.getProductivityBreakDuration());
             getActivity().startForegroundService(serviceIntent);
 
-            // 啟動監控線程
+
             monitoringThread = new Thread(() -> {
                 int updateCounter = 0;
                 while (isMonitoring) {
@@ -166,24 +166,24 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                         String foregroundApp = getCurrentForegroundApp();
                         updateCounter++;
 
-                        // 處理應用切換或強制每 5 秒更新一次通知
+
                         if ((foregroundApp != null && !foregroundApp.equals(currentForegroundApp)) ||
                                 (updateCounter >= 5)) {
 
                             updateCounter = 0;
 
                             if (foregroundApp != null && !foregroundApp.equals(currentForegroundApp)) {
-                                // 應用發生切換
+
                                 handleAppSwitch(foregroundApp);
 
-                                // 正常的應用切換更新邏輯
+
                                 currentForegroundApp = foregroundApp;
                                 appUsageStartTime = System.currentTimeMillis();
                             }
 
-                            // 無論是否切換應用，都更新通知
+
                             if (foregroundApp != null) {
-                                // 獲取應用類型對應的工作時長
+
                                 long workDuration = getWorkDurationForApp(foregroundApp);
 
                                 Intent updateIntent = new Intent(getActivity(), MonitoringService.class);
@@ -196,15 +196,15 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                                 updateIntent.putExtra("productivityBreakDuration", parentFragment.getProductivityBreakDuration());
                                 getActivity().startService(updateIntent);
 
-                                // 同時更新 UI
+
                                 updateUI(foregroundApp);
 
-                                // 檢查休息時間
+
                                 checkForBreakTime(foregroundApp);
                             }
                         }
 
-                        Thread.sleep(1000); // 每秒檢查一次
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         Log.e(TAG, "Monitoring thread interrupted", e);
                     }
@@ -226,7 +226,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             isInBreak = false;
             textView.setText("Monitoring stopped");
 
-            // 停止前台服务
+
             Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
             getActivity().stopService(serviceIntent);
         }
@@ -235,13 +235,13 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     private String getCurrentForegroundApp() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             long endTime = System.currentTimeMillis();
-            long beginTime = endTime - 5000; // 縮短回溯時間，提高響應速度
+            long beginTime = endTime - 5000;
 
             String currentApp = null;
             UsageEvents usageEvents = usageStatsManager.queryEvents(beginTime, endTime);
             UsageEvents.Event event = new UsageEvents.Event();
 
-            // 改進檢測邏輯，跟蹤前台和後台事件
+
             while (usageEvents.hasNextEvent()) {
                 usageEvents.getNextEvent(event);
 
@@ -253,7 +253,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                 }
             }
 
-            // 如果是自己的應用，返回 null
+
             if (currentApp != null && currentApp.equals(getActivity().getPackageName())) {
                 return null;
             }
@@ -274,17 +274,17 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             breakTimer.cancel();
         }
 
-        // 獲取應用類型對應的工作時長
+
         long workDuration = getWorkDurationForApp(newApp);
 
-        // 更新前台服務通知
+
         Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
         serviceIntent.putExtra("appName", AppCategorizationUtils.getAppName(getActivity(), newApp));
         serviceIntent.putExtra("appType", AppCategorizationUtils.getAppType(newApp));
         serviceIntent.putExtra("startTime", appUsageStartTime);
         serviceIntent.putExtra("workDuration", (long)workDuration);
 
-        // 添加這兩行 - 確保每次都傳遞休息時長
+
         serviceIntent.putExtra("entertainmentBreakDuration", parentFragment.getEntertainmentBreakDuration());
         serviceIntent.putExtra("productivityBreakDuration", parentFragment.getProductivityBreakDuration());
 
@@ -307,7 +307,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - appUsageStartTime;
 
-        // 使用你已有的方法獲取工作時長
+
         long workDuration = getWorkDurationForApp(packageName);
 
         Log.d(TAG, "checkForBreakTime: elapsedTime=" + (elapsedTime/1000) + "s, workDuration=" +
@@ -351,7 +351,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         // Show notification
         showBreakNotification(AppCategorizationUtils.getAppName(getActivity(), packageName), breakDuration);
 
-        // 通知服務進入休息狀態
+
         Intent breakIntent = new Intent(getActivity(), MonitoringService.class);
         breakIntent.setAction("START_BREAK");
         breakIntent.putExtra("appName", AppCategorizationUtils.getAppName(getActivity(), packageName));
@@ -389,7 +389,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                 isInBreak = false;
                 appUsageStartTime = System.currentTimeMillis(); // Reset usage timer
 
-                // 通知服務結束休息狀態
+
                 Intent endBreakIntent = new Intent(getActivity(), MonitoringService.class);
                 endBreakIntent.setAction("END_BREAK");
                 endBreakIntent.putExtra("appName", AppCategorizationUtils.getAppName(getActivity(), packageName));
@@ -510,7 +510,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    // 在 Page2AFragment 類的頂部聲明廣播接收器
+
     private android.content.BroadcastReceiver timeoutReceiver = new android.content.BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -526,9 +526,9 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        // 註冊廣播接收器
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13及以上版本
+
             getActivity().registerReceiver(
                     timeoutReceiver,
                     new android.content.IntentFilter("com.example.csci3310project.TIMEOUT_ACTION"),
@@ -540,11 +540,11 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onPause() {
         super.onPause();
-        // 取消註冊廣播接收器
+
         try {
             getActivity().unregisterReceiver(timeoutReceiver);
         } catch (IllegalArgumentException e) {
-            // 接收器未註冊的情況
+
         }
     }
 
