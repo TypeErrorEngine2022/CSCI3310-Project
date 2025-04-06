@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
+    implementation(project(":OpenCV"))
+//    implementation(libs.litert.support.api)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -54,7 +56,7 @@ dependencies {
 
     // ML Kit Face Detection
     //implementation("com.google.android.gms:play-services-mlkit-face-detection:17.1.0")
-    implementation ("com.google.mlkit:face-detection:16.1.7")
+//    implementation ("com.google.mlkit:face-detection:16.1.7")
 
     // -
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
@@ -64,4 +66,17 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation ("commons-io:commons-io:2.4")
+
+    // ai shit
+//    implementation("org.pytorch:pytorch_android_lite:2.3.0")
+//    implementation("org.pytorch:pytorch_android_torchvision_lite:2.3.0")
+//    implementation("com.quickbirdstudios:opencv:4.8.0-contrib")
+//    implementation("com.github.quickbirdstudios:retinaface-android:1.0.0")
+
+    // more ai shit
+    implementation ("org.tensorflow:tensorflow-lite:2.12.0")
+//    implementation ("org.tensorflow:tensorflow-lite-gpu:2.12.0") // GPU accel
+    implementation ("org.tensorflow:tensorflow-lite-support:0.4.4")
+
 }
