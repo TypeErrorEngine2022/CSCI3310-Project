@@ -36,7 +36,7 @@ public class LlmInitializationWorker extends Worker {
             return Result.success();
         } catch (Exception e) {
             Log.e(TAG, "Error initializing LLM model", e);
-            return Result.failure();
+            return Result.retry();
         }
     }
 
