@@ -1,6 +1,7 @@
 package com.example.csci3310project;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +58,9 @@ public class Page2BFragment extends Fragment {
             int productivityBreakDuration = Integer.parseInt(productivityBreakDurationInput.getText().toString()) * 60 * 1000;
             int entertainmentWorkDuration = Integer.parseInt(entertainmentWorkDurationInput.getText().toString()) * 60 * 1000;
             int entertainmentBreakDuration = Integer.parseInt(entertainmentBreakDurationInput.getText().toString()) * 60 * 1000;
-
+            Log.d("Page2BFragment", "User settings - Entertainment break: " +
+                    (entertainmentBreakDuration/60000) + "min, Productivity break: " +
+                    (productivityBreakDuration/60000) + "min");
             // Validate inputs
             if (productivityWorkDuration <= 0 || productivityBreakDuration <= 0 ||
                     entertainmentWorkDuration <= 0 || entertainmentBreakDuration <= 0) {

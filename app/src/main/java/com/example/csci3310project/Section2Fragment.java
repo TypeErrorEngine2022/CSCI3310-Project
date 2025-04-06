@@ -1,6 +1,7 @@
 package com.example.csci3310project;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,6 +73,10 @@ public class Section2Fragment extends Fragment {
         this.productivityBreakDuration = productivityBreakDur;
         this.entertainmentWorkDuration = entertainmentWorkDur;
         this.entertainmentBreakDuration = entertainmentBreakDur;
+
+        Log.d("Section2Fragment", "Settings stored - Entertainment break: " +
+                (entertainmentBreakDuration/60000) + "min, Productivity break: " +
+                (productivityBreakDuration/60000) + "min");
 
         Toast.makeText(getContext(), "Settings saved successfully", Toast.LENGTH_SHORT).show();
     }
