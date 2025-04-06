@@ -50,7 +50,7 @@ public class RewardFragment extends Fragment {
         // Only generate comment if the model is ready and not already generating
         llmInferenceManager.getModelReadyState().observe(getViewLifecycleOwner(), isReady -> {
             if (isReady && !isGeneratingComment.get()) {
-                generateComment();
+                generateComment(false);
             }
         });
 
@@ -60,13 +60,14 @@ public class RewardFragment extends Fragment {
 
         // if the model is already initialized, generate comment immediately
         if (llmInferenceManager.isModelReady() && !isGeneratingComment.get()) {
-            generateComment();
+            generateComment(false);
         }
 
         retryButton.setOnClickListener(v -> {
             outputTextView.setText("");
             showLoading("Getting your personalized analysis...");
-            generateComment();
+            generateComment(true);
+            retryButton.setVisibility(View.GONE);
         });
 
         return view;
@@ -82,27 +83,33 @@ public class RewardFragment extends Fragment {
     }
 
     @SuppressLint("SetTextI18n")
-    private void generateComment() {
+    private void generateComment(boolean force) {
         // Prevent multiple simultaneous calls
         // getAndSet returns the previous value and sets it to a new value
         if (isGeneratingComment.getAndSet(true)) {
             return;
         }
 
-        String latestComment = CommentManager.getCommentIfValid(requireContext());
-        if (latestComment != null) {
-            Log.d(TAG, "Using cached comment: " + latestComment);
-            hideLoading();
-            outputTextView.setText(latestComment);
-            isGeneratingComment.set(false);
-            return;
-        }
+        if (!force) {
+            String latestComment = CommentManager.getCommentIfValid(requireContext());
+            if (latestComment != null) {
+                Log.d(TAG, "Using cached comment: " + latestComment);
+                hideLoading();
+                outputTextView.setText(latestComment);
+                isGeneratingComment.set(false);
+                retryButton.setVisibility(View.VISIBLE);
+                return;
+            }
 
-        // if user go back and forth between fragments, we need to prevent sending multiple inference requests
-        if (!CommentManager.isCommentRequestAllowed(requireContext())) {
-            // do nothing, the last request will update the UI when it is done
-            isGeneratingComment.set(true);
-            return;
+            // if user go back and forth between fragments, we need to prevent sending multiple inference requests
+            if (!CommentManager.isCommentRequestAllowed(requireContext())) {
+                // do nothing, the last request will update the UI when it is done
+                isGeneratingComment.set(true);
+                retryButton.setVisibility(View.VISIBLE);
+                return;
+            }
+        } else {
+            Log.d(TAG, "Force generating comment");
         }
 
         CommentManager.setCommentRequestTimestamp(requireContext());
@@ -123,7 +130,7 @@ public class RewardFragment extends Fragment {
                             hideLoading();
                             outputTextView.setText(response);
                             isGeneratingComment.set(false);
-                            retryButton.setVisibility(View.GONE);
+                            retryButton.setVisibility(View.VISIBLE);
                         });
                     }
                 }
@@ -205,7 +212,7 @@ public class RewardFragment extends Fragment {
             } else {
                 outputTextView.setText(resultReceivedWhilePaused);
             }
-
+            retryButton.setVisibility(View.VISIBLE);
             resultReceivedWhilePaused = null;
             return;
         }
@@ -213,7 +220,7 @@ public class RewardFragment extends Fragment {
         // If we were not generating when paused, and the model is ready, start generating a comment
         Log.d(TAG, "onResume: isGeneratingComment = " + isGeneratingComment.get());
         if (llmInferenceManager.isModelReady() && !isGeneratingComment.get() && outputTextView.getText().toString().contains("Getting your personalized analysis")) {
-            generateComment();
+            generateComment(false);
         }
     }
 }
