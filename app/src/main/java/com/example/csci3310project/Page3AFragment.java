@@ -10,6 +10,7 @@ import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.FileUtils;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
@@ -40,21 +41,43 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mediapipe.framework.image.MPImage;
+import com.google.mediapipe.framework.image.MediaImageBuilder;
+import com.google.mediapipe.tasks.components.containers.NormalizedLandmark;
+import com.google.mediapipe.tasks.core.BaseOptions;
+import com.google.mediapipe.tasks.vision.core.RunningMode;
+import com.google.mediapipe.tasks.vision.*;
 
+import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarker;
+import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarkerResult;
+
+import org.opencv.android.Utils;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
+import org.opencv.core.Point3;
+import org.opencv.imgproc.Imgproc;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
+
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.*;
 import org.opencv.calib3d.Calib3d;
+
 
 public class Page3AFragment extends Fragment {
     // UI Elements
@@ -64,6 +87,7 @@ public class Page3AFragment extends Fragment {
     // Camera/Sensor
     private ProcessCameraProvider cameraProvider;
     private SensorManager sensorManager;
+    private Sensor rotationVectorSensor;
     private float devicePitchDegrees = 0;
 
     // MediaPipe
@@ -78,8 +102,7 @@ public class Page3AFragment extends Fragment {
     );
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         return inflater.inflate(R.layout.page3a, container, false);
     }
@@ -93,8 +116,7 @@ public class Page3AFragment extends Fragment {
         deviceTiltView = view.findViewById(R.id.deviceAngle);
 
         SensorManager sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-        if (OpenCVLoader.initLocal()) {
-            Log.i("OpenCV", "OpenCV loaded successfully");
+
             if (sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) == null) {
                 // Device doesn't support rotation vector sensor
                 AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -104,28 +126,29 @@ public class Page3AFragment extends Fragment {
                         .setCancelable(false)
                         .show();
             } else {
+                initializeMediaPipe();
                 // Check camera permissions before starting if not granted request them
                 if (cameraPermission()) {
                     startCamera();
                 } else {
-                    requestPermissions(
-                            new String[]{Manifest.permission.CAMERA},
-                            1001
-                    );
+                    requestPermissions(new String[]{Manifest.permission.CAMERA}, 1001);
                 }
             }
-        } else {
-            Log.e("OpenCV", "OpenCV initialization failed!");
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            builder.setTitle("Error")
-                    .setMessage("An error occured. Details: opencv init fail")
-                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                    .setCancelable(false)
-                    .show();
-        }
     }
 
-    private Sensor rotationVectorSensor;
+    private void initializeMediaPipe() {
+        BaseOptions baseOptions = BaseOptions.builder()
+                .setModelAssetPath("face_landmarker.task")
+                .build();
+
+        FaceLandmarker.FaceLandmarkerOptions options = FaceLandmarker.FaceLandmarkerOptions.builder()
+                .setBaseOptions(baseOptions)
+                .setRunningMode(RunningMode.LIVE_STREAM)
+                .setResultListener(this::processLandmarkerResults)
+                .build();
+
+        faceLandmarker = FaceLandmarker.createFromOptions(requireContext(), options);
+    }
 
     @Override
     public void onResume() {
@@ -172,46 +195,6 @@ public class Page3AFragment extends Fragment {
         return true;
     }
 
-    private static final int INPUT_SIZE = 256; // Model input size
-
-    public class TFLiteHelper {
-        private Interpreter tflite;
-        private static final String MODEL_FILE = "face_landmarks_detector.tflite";
-
-        public TFLiteHelper(Context context) throws IOException {
-            MappedByteBuffer modelFile = FileUtil.loadMappedFile(context, MODEL_FILE);
-            Interpreter.Options options = new Interpreter.Options();
-            options.setUseNNAPI(true); // Enable hardware acceleration
-            tflite = new Interpreter(modelFile, options);
-        }
-
-        public float[][][] detectFace(Bitmap bitmap) {
-            // Preprocess input
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);
-            ByteBuffer inputBuffer = convertBitmapToByteBuffer(scaledBitmap);
-
-            // Run inference
-            float[][][][] outputArray = new float[1][1][1][1434]; // [pitch, yaw, roll]
-            tflite.run(inputBuffer, outputArray);
-            return outputArray[0];
-        }
-
-        private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
-            ByteBuffer buffer = ByteBuffer.allocateDirect(4 * INPUT_SIZE * INPUT_SIZE * 3);
-            buffer.order(ByteOrder.nativeOrder());
-
-            int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
-            bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-            for (int pixel : intValues) {
-                buffer.putFloat(((pixel >> 16) & 0xFF) / 255.0f); // R
-                buffer.putFloat(((pixel >> 8) & 0xFF) / 255.0f);  // G
-                buffer.putFloat((pixel & 0xFF) / 255.0f);         // B
-            }
-            return buffer;
-        }
-    }
-
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(getContext());
 
@@ -225,89 +208,97 @@ public class Page3AFragment extends Fragment {
         }, ContextCompat.getMainExecutor(getContext()));
     }
 
-    private TFLiteHelper tfliteHelper;
-
     @OptIn(markerClass = ExperimentalGetImage.class)
     void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
-        try {
-            tfliteHelper = new TFLiteHelper(requireContext());
-        } catch (IOException e) {
-            Log.e("TFLite", "Model loading failed", e);
-            return;
-        }
-
         Preview preview = new Preview.Builder()
                 .build();
-
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
-
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(INPUT_SIZE, INPUT_SIZE))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build();
 
         imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), imageProxy -> {
-            Bitmap bitmap = imageProxyToBitmap(imageProxy);
-            if (bitmap != null) {
-                float[][][] angles = tfliteHelper.detectFace(bitmap);
+            long frameTime = SystemClock.uptimeMillis();
 
-                // Camera matrix approximation
-                Mat cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-                cameraMatrix.put(0, 0, imageProxy.getWidth());
-                cameraMatrix.put(1, 1, imageProxy.getWidth());
-                cameraMatrix.put(0, 2, imageProxy.getWidth()/2.0);
-                cameraMatrix.put(1, 2, imageProxy.getHeight()/2.0);
-
-                Mat rotationVector = new Mat();
-                Mat translationVector = new Mat();
-                Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix,
-                        new MatOfDouble(), rotationVector, translationVector);
-
-                // Convert rotation vector to Euler angles
-                double[] rotationArray = rotationVector.get(0, 0);
-                // float headPitch = angles[0]; // Model output order: [pitch, yaw, roll]
-                double headPitch = Math.toDegrees(rotationArray[0]);
-                float totalPitch = (float) (headPitch + devicePitchDegrees);
-                updateUITilt((float) headPitch, totalPitch, devicePitchDegrees);
+            // Convert ImageProxy to MPImage
+            MPImage mpImage = imageProxyToMPImage(imageProxy);
+            if (mpImage != null) {
+                faceLandmarker.detectAsync(mpImage, frameTime);
             }
+
             imageProxy.close();
         });
+
         Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageAnalysis);
     }
 
-    @OptIn(markerClass = ExperimentalGetImage.class)
-    private Bitmap imageProxyToBitmap(ImageProxy imageProxy) {
-        Image image = imageProxy.getImage();
-        if (image == null) return null;
+    private void processLandmarkerResults(FaceLandmarkerResult result, MPImage mpImage) {
+        if (result.faceLandmarks().isEmpty()) return;
 
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
+        int[] landmarkIndices = {4, 199, 33, 263, 61, 291};
+        List<Point> points = new ArrayList<>();
 
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
+        for (int index : landmarkIndices) {
+            NormalizedLandmark landmark = result.faceLandmarks().get(0).get(index);
+            // Flip x-coordinate for front-facing camera
+            float flippedX = 1.0f - landmark.x();
+            points.add(new Point(
+                    flippedX * mpImage.getWidth(),
+                    landmark.y() * mpImage.getHeight()
+            ));
+        }
 
-        byte[] nv21 = new byte[ySize + uSize + vSize];
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
+        MatOfPoint2f imagePoints = new MatOfPoint2f();
+        imagePoints.fromList(points);
 
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21,
-                image.getWidth(), image.getHeight(), null);
+        Mat cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
+        double focalLength = mpImage.getWidth();
+        cameraMatrix.put(0, 0, focalLength);
+        cameraMatrix.put(1, 1, focalLength);
+        cameraMatrix.put(0, 2, mpImage.getWidth() / 2.0);
+        cameraMatrix.put(1, 2, mpImage.getHeight() / 2.0);
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
-        byte[] imageBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+        // Solve PnP
+        Mat rotationVector = new Mat();
+        Mat translationVector = new Mat();
+        Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix,
+                new MatOfDouble(), rotationVector, translationVector);
+
+        // Convert to Euler angles
+        Mat rotationMatrix = new Mat();
+        Calib3d.Rodrigues(rotationVector, rotationMatrix);
+        double pitch = Math.toDegrees(Math.asin(-rotationMatrix.get(2, 1)[0]));
+
+        if (devicePitchDegrees > 70) {
+
+        } else if (devicePitchDegrees > 60) {
+            pitch += 5;
+        } else if (devicePitchDegrees > 55) {
+            pitch += 10;
+        } else if (devicePitchDegrees > 50) {
+            pitch += 15;
+        } else if (devicePitchDegrees > 35) {
+            pitch += 20;
+        } else {
+            pitch += 25;
+        }
+        updateUI((float) pitch, devicePitchDegrees);
     }
 
-    private void updateUITilt(float faceTilt, float deviceTilt) {
+    @OptIn(markerClass = ExperimentalGetImage.class)
+    private MPImage imageProxyToMPImage(ImageProxy imageProxy) {
+        android.media.Image image = imageProxy.getImage();
+        if (image == null) return null;
+        return new MediaImageBuilder(image).build();
+    }
+
+    private void updateUI(float faceTilt, float deviceTilt) {
+
         float totalTilt = faceTilt + deviceTilt;
         getActivity().runOnUiThread(() -> {
             faceTiltView.setText(String.format("Neck Tilt: %.1f°", faceTilt));
