@@ -34,8 +34,12 @@ public class ScreenTimeTrackingFragment extends Fragment {
             int itemId = item.getItemId();
 
             if(itemId == R.id.page_1a) {
-                checkPermissionsAndStartTracking();
                 fragment = new DashboardFragment();
+                // make this async to avoid blocking UI thread!!
+                // if we call checkPermissionsAndStartTracking() directly, it will block the UI thread
+                // and I have observed about 1 second delay in that case
+                // view.post is a async call, reference: https://developer.android.com/guide/components/processes-and-threads?hl=zh-tw#WorkerThreads
+                requireView().post(this::checkPermissionsAndStartTracking);
             } else if(itemId == R.id.page_1b) {
                 // reward fragment will check permission by itself
                 fragment = new RewardFragment();
