@@ -24,18 +24,18 @@ public class MonitoringService extends Service {
     private String currentAppName = "Unknown";
     private String currentAppType = "Unknown";
     private long startTime = 0;
-    private long workDuration = 30 * 60 * 1000; // 默認30分鐘
+    private long workDuration = 30 * 60 * 1000;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable updateNotificationRunnable = new Runnable() {
         @Override
         public void run() {
-            // 更新通知
+
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.notify(NOTIFICATION_ID, createNotification().build());
             }
-            // 每秒執行一次
+
             handler.postDelayed(this, 1000);
         }
     };
@@ -46,40 +46,40 @@ public class MonitoringService extends Service {
         createNotificationChannel();
     }
 
-    // 在 MonitoringService 類中添加
+
     private final Runnable checkTimeoutRunnable = new Runnable() {
         @Override
         public void run() {
             if (isInBreak) {
-                // 檢查休息時間是否結束
+
                 long elapsedBreakTime = System.currentTimeMillis() - breakStartTime;
                 if (elapsedBreakTime >= breakDuration) {
                     Log.d("MonitoringService", "Break time finished automatically!");
 
-                    // 自動結束休息時間
+
                     isInBreak = false;
-                    // 重置應用使用計時
+
                     startTime = System.currentTimeMillis();
 
-                    // 發送廣播通知Fragment休息時間結束
+
                     Intent breakEndedIntent = new Intent("com.example.csci3310project.BREAK_ENDED_ACTION");
                     breakEndedIntent.putExtra("appName", currentAppName);
                     sendBroadcast(breakEndedIntent);
 
-                    // 更新通知
+
                     NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                     if (manager != null) {
                         manager.notify(NOTIFICATION_ID, createNotification().build());
                     }
                 }
             }else {
-                // 檢查是否超時
+
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
                 if (elapsedTime >= workDuration) {
                     Log.d("MonitoringService", "TIMEOUT DETECTED! Starting break for " + currentAppName);
 
-                    // 根據應用類型選擇休息時長
+
                     long breakTime;
                     if (AppCategorizationUtils.isEntertainmentApp(currentAppName) ||
                             currentAppType.equals("Entertainment") ||
@@ -91,10 +91,10 @@ public class MonitoringService extends Service {
 
                     Log.d("MonitoringService", "Using break duration: " + (breakTime/1000) + "s based on app type: " + currentAppType);
 
-                    // 設置休息狀態
+
                     startBreak(currentAppName, breakTime);
 
-                    // 發送廣播到 Fragment 通知超時
+
                     Intent timeoutIntent = new Intent("com.example.csci3310project.TIMEOUT_ACTION");
                     timeoutIntent.putExtra("packageName", currentAppName);
                     sendBroadcast(timeoutIntent);
@@ -104,8 +104,8 @@ public class MonitoringService extends Service {
         }
     };
 
-    private long entertainmentBreakDuration = 10 * 60 * 1000; // 默認10分鐘
-    private long productivityBreakDuration = 30 * 60 * 1000; // 默認30分鐘
+    private long entertainmentBreakDuration = 10 * 60 * 1000;
+    private long productivityBreakDuration = 30 * 60 * 1000;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -113,7 +113,7 @@ public class MonitoringService extends Service {
             String action = intent.getAction();
             Log.d("MonitoringService", "onStartCommand: Received intent with action: " + (action != null ? action : "null"));
 
-            // 處理休息開始
+
             if ("START_BREAK".equals(action)) {
                 Log.d("MonitoringService", "onStartCommand: Starting break");
                 String appName = intent.getStringExtra("appName");
@@ -124,7 +124,7 @@ public class MonitoringService extends Service {
                 return START_NOT_STICKY;
             }
 
-            // 處理休息結束
+
             if ("END_BREAK".equals(action)) {
                 Log.d("MonitoringService", "onStartCommand: Ending break");
                 String appName = intent.getStringExtra("appName");
@@ -135,7 +135,7 @@ public class MonitoringService extends Service {
                 return START_NOT_STICKY;
             }
 
-            // 檢查是否是更新通知的意圖
+
             if ("UPDATE_NOTIFICATION".equals(action)) {
                 String appName = intent.getStringExtra("appName");
                 String appType = intent.getStringExtra("appType");
@@ -145,7 +145,7 @@ public class MonitoringService extends Service {
                 return START_NOT_STICKY;
             }
 
-            // 一般服務啟動 - 這裡需要獲取休息時長設置
+
             entertainmentBreakDuration = intent.getLongExtra("entertainmentBreakDuration", 10 * 60 * 1000);
             productivityBreakDuration = intent.getLongExtra("productivityBreakDuration", 30 * 60 * 1000);
             long entBreakDuration = intent.getLongExtra("entertainmentBreakDuration", 10 * 60 * 1000);
@@ -214,12 +214,12 @@ public class MonitoringService extends Service {
         }
     }
 
-    // 在 MonitoringService 類中添加
+
     private boolean isInBreak = false;
     private long breakStartTime = 0;
     private long breakDuration = 0;
 
-    // 修改 createNotification() 方法
+
     private NotificationCompat.Builder createNotification() {
         Log.d("MonitoringService", "createNotification: isInBreak=" + isInBreak);
 
@@ -260,7 +260,7 @@ public class MonitoringService extends Service {
         }
     }
 
-    // 添加方法處理休息狀態
+
     public void startBreak(String appName, long breakDuration) {
         Log.d("MonitoringService", "startBreak: Setting isInBreak=true for " + appName + " with duration " + (breakDuration / 1000) + " seconds");
         this.isInBreak = true;
