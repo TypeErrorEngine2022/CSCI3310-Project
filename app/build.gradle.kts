@@ -43,9 +43,9 @@ dependencies {
     implementation(libs.camera.view)
     implementation(project(":OpenCV"))
 //    implementation(libs.litert.support.api)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+//    testImplementation(libs.junit)
+//    androidTestImplementation(libs.ext.junit)
+//    androidTestImplementation(libs.espresso.core)
     annotationProcessor(libs.room.compiler)
 
     // CameraX
@@ -79,4 +79,13 @@ dependencies {
 //    implementation ("org.tensorflow:tensorflow-lite-gpu:2.12.0") // GPU accel
     implementation ("org.tensorflow:tensorflow-lite-support:0.4.4")
 
+    // Unit testing
+    testImplementation ("junit:junit:4.13.2")
+
+    // Instrumented testing
+    androidTestImplementation ("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation ("androidx.test.espresso:espresso-core:3.4.0")
+
+    implementation ("com.google.mediapipe:tasks-vision:0.10.14")
+    //implementation ("org.opencv:opencv-android:4.8.0")
 }
