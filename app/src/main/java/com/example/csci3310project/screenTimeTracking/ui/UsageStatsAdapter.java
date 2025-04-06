@@ -3,6 +3,7 @@ package com.example.csci3310project.screenTimeTracking.ui;
 import static androidx.recyclerview.widget.DiffUtil.calculateDiff;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,10 +11,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci3310project.R;
 import com.example.csci3310project.screenTimeTracking.data.AppCategory;
+import com.example.csci3310project.screenTimeTracking.data.UsageRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +99,30 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
             holder.productivityTextView.setText("classifying");
             holder.productivityTextView.setBackgroundResource(R.drawable.section1_unclassified_tag_background);
         }
+
+        holder.productivityTextView.setOnClickListener(v -> showProductivitySelectionDialog(holder.itemView.getContext(), usageStatUIModel));
+    }
+
+    private void showProductivitySelectionDialog(Context context, UsageStatUIModel model) {
+        String[] options = {
+                AppCategory.PRODUCTIVE.getValue(),
+                AppCategory.NON_PRODUCTIVE.getValue()
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Set productivity type for " + model.getAppName())
+                .setItems(options, (dialog, which) -> {
+                    int position = usageStatsList.indexOf(model);
+                    if (position == -1) {
+                        return;
+                    }
+                    String newCategory = options[which];
+                    UsageRepository repository = new UsageRepository(context);
+                    boolean isProductive = newCategory.equals(AppCategory.PRODUCTIVE.getValue());
+                    repository.updateAppProductivityAsync(model.getPackageName(), isProductive);
+                    notifyItemChanged(position);
+                })
+                .show();
     }
 
     @Override

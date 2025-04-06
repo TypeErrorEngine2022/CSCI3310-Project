@@ -40,6 +40,7 @@ public class UsageStatsUseCase {
             String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
 
             UsageStatUIModel uiModel = new UsageStatUIModel(
+                    fullPackageName,
                     appName,
                     stats.getTotalTimeInForeground(),
                     appIcon,
@@ -64,6 +65,7 @@ public class UsageStatsUseCase {
                 String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
 
                 UsageStatUIModel uiModel = new UsageStatUIModel(
+                        fullPackageName,
                         appName,
                         stats.getTotalTimeInForeground(),
                         appIcon,
