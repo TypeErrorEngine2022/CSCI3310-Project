@@ -2,6 +2,8 @@ package com.example.csci3310project.screenTimeTracking.ui;
 
 import android.os.Bundle;
 import android.view.*;
+import android.widget.ProgressBar;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -16,13 +18,19 @@ import java.util.ArrayList;
 public class DashboardFragment extends Fragment {
     private UsageStatsAdapter adapter;
 
+    private RecyclerView usageStatsRecyclerView;
+    private ProgressBar loadingProgressBar;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.section1_dashboard, container, false);
 
-        RecyclerView usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
+        usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
         usageStatsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        loadingProgressBar = view.findViewById(R.id.dashboard_progress_bar);
+
+        showLoading(true);
 
         adapter = new UsageStatsAdapter(new ArrayList<>());
         usageStatsRecyclerView.setAdapter(adapter);
@@ -39,9 +47,15 @@ public class DashboardFragment extends Fragment {
         // the reason to observer usage stat, instead of getting static list
         // because the background service will classify the app, which will update the item
         viewModel.getUsageStats().observe(getViewLifecycleOwner(), usageStats -> {
+            showLoading(false);
             adapter = new UsageStatsAdapter(usageStats);
             RecyclerView usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
             usageStatsRecyclerView.setAdapter(adapter);
         });
+    }
+
+    private void showLoading(boolean isLoading) {
+        loadingProgressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        usageStatsRecyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
     }
 }
