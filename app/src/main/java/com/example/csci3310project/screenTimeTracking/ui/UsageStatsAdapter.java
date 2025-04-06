@@ -4,6 +4,7 @@ import static androidx.recyclerview.widget.DiffUtil.calculateDiff;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +29,8 @@ import androidx.recyclerview.widget.DiffUtil;
  */
 
 public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.UsageStatsViewHolder> {
+    private static final String TAG = "UsageStatsAdapter";
+
     private List<UsageStatUIModel> usageStatsList;
 
     public UsageStatsAdapter(List<UsageStatUIModel> usageStatsList) {
@@ -109,19 +112,45 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
                 AppCategory.NON_PRODUCTIVE.getValue()
         };
 
+        int checkedItem;
+        if (model.getAppCategory().equals(AppCategory.PRODUCTIVE.getValue())) {
+            checkedItem = 0;
+        } else if (model.getAppCategory().equals(AppCategory.NON_PRODUCTIVE.getValue())) {
+            checkedItem = 1;
+        } else {
+            checkedItem = -1;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Set productivity type for " + model.getAppName())
-                .setItems(options, (dialog, which) -> {
-                    int position = usageStatsList.indexOf(model);
-                    if (position == -1) {
+                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
+                    if (checkedItem == which) {
+                        Log.d(TAG, "already selected: " + options[which]);
+                        dialog.dismiss();
                         return;
                     }
+
+                    int position = -1;
+                    for (int i = 0; i < usageStatsList.size(); i++) {
+                        if (usageStatsList.get(i).getAppName().equals(model.getAppName())) {
+                            position = i;
+                            break;
+                        }
+                    }
+                    if (position == -1) {
+                        Log.e(TAG, model.getAppName() +" not found in the list");
+                        dialog.dismiss();
+                        return;
+                    }
+
                     String newCategory = options[which];
                     UsageRepository repository = new UsageRepository(context);
                     boolean isProductive = newCategory.equals(AppCategory.PRODUCTIVE.getValue());
                     repository.updateAppProductivityAsync(model.getPackageName(), isProductive);
-                    notifyItemChanged(position);
+                    Log.d(TAG, "sent request to update app productivity: " + model.getPackageName() + " to " + newCategory);
+                    dialog.dismiss();
                 })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
