@@ -9,9 +9,9 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.csci3310project.screenTimeTracking.data.AppDatabase;
-import com.example.csci3310project.screenTimeTracking.data.UsageDao;
+import com.example.csci3310project.screenTimeTracking.data.AppCategory;
 import com.example.csci3310project.screenTimeTracking.data.UsageEntity;
+import com.example.csci3310project.screenTimeTracking.data.UsageRepository;
 
 import static com.example.csci3310project.screenTimeTracking.domain.AppUtils.getAppName;
 import static com.example.csci3310project.screenTimeTracking.domain.AppUtils.isSystemApp;
@@ -42,7 +42,7 @@ public class AppClassificationWorker extends Worker {
             PackageManager packageManager = context.getPackageManager();
             List<ApplicationInfo> apps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
 
-            UsageDao dao = AppDatabase.getDatabase(context).usageDao();
+            UsageRepository repository = new UsageRepository(getApplicationContext());
 
             for (ApplicationInfo app : apps) {
                 String packageName = app.packageName;
@@ -52,22 +52,11 @@ public class AppClassificationWorker extends Worker {
 
                 String appName = getAppName(context, packageName);
 
-                // Check if app is already classified in a background thread
-                AppDatabase.databaseWriteExecutor.execute(() -> {
-                    try {
-                        UsageEntity entity = dao.findByPackageName(packageName);
+                UsageEntity entity = repository.getAppSync(packageName);
 
-                        if (entity == null) {
-                            entity = new UsageEntity(packageName, 0);
-                        }
-
-                        if (entity.app_category.equals("unclassified")) {
-                            classifyApp(llmManager, packageName, appName, entity, dao);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error checking app classification: " + packageName, e);
-                    }
-                });
+                if (entity == null || entity.app_category.equals(AppCategory.UNCLASSIFIED.getValue())) {
+                    classifyApp(llmManager, packageName, appName, repository);
+                }
             }
 
             return Result.success();
@@ -77,8 +66,7 @@ public class AppClassificationWorker extends Worker {
         }
     }
 
-    private void classifyApp(LlmInferenceManager llmManager, String packageName, String appName,
-                             UsageEntity entity, UsageDao dao) {
+    private void classifyApp(LlmInferenceManager llmManager, String packageName, String appName, UsageRepository repository) {
         String prompt = "Is " + appName + " (" + packageName + ") a productivity app? " +
                 "Productivity apps help users work, study, or accomplish tasks. " +
                 "Answer with 'yes' or 'no' only.";
@@ -87,17 +75,8 @@ public class AppClassificationWorker extends Worker {
             @Override
             public void onResponse(String response) {
                 boolean isProductivity = response.trim().toLowerCase().contains("yes");
-                Log.d(TAG, "App: " + appName + " classified as: " + (isProductivity ? "productive" : "non-productive"));
-
-                // Update and store the classification in database
-                AppDatabase.databaseWriteExecutor.execute(() -> {
-                    try {
-                        entity.app_category = isProductivity ? "productive" : "non-productive";
-                        dao.upsertUsageEntity(entity);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error saving classification for " + packageName, e);
-                    }
-                });
+                Log.d(TAG, "App: " + appName + " classified as: " + (AppCategory.fromBoolean(isProductivity)));
+                repository.updateAppProductivityAsync(packageName, isProductivity);
             }
 
             @Override

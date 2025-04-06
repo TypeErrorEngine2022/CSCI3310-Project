@@ -30,9 +30,7 @@ public class UsageEntity {
         this.app_category = "unclassified";
     }
 
-    public UsageEntity(@NonNull String packageName, long totalMsInForeground) {
-        this.packageName = packageName;
-        this.totalMsInForeground = totalMsInForeground;
-        this.app_category = "unclassified";
+    public boolean isProductiveApp() {
+        return app_category.equals("productive");
     }
 }

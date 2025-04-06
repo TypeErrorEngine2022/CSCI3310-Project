@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci3310project.R;
+import com.example.csci3310project.screenTimeTracking.data.AppCategory;
 
 import java.util.List;
 
@@ -37,9 +38,17 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
     @Override
     public void onBindViewHolder(@NonNull UsageStatsViewHolder holder, int position) {
         UsageStatUIModel usageStatUIModel = usageStatsList.get(position);
-        holder.packageNameTextView.setText(usageStatUIModel.getPackageName());
+        holder.packageNameTextView.setText(usageStatUIModel.getAppName());
         holder.timeTextView.setText(usageStatUIModel.getFormattedTime());
         holder.appIconImageView.setImageDrawable(usageStatUIModel.getAppIcon());
+
+        if (usageStatUIModel.isProductive()) {
+            holder.productivityTextView.setText(AppCategory.PRODUCTIVE.getValue());
+            holder.productivityTextView.setBackgroundResource(R.drawable.section1_produtivity_tag_background);
+        } else {
+            holder.productivityTextView.setText(AppCategory.NON_PRODUCTIVE.getValue());
+            holder.productivityTextView.setBackgroundResource(R.drawable.section1_non_productive_tag_background);
+        }
     }
 
     @Override
@@ -53,11 +62,14 @@ public class UsageStatsAdapter extends RecyclerView.Adapter<UsageStatsAdapter.Us
 
         public ImageView appIconImageView;
 
+        public  TextView productivityTextView;
+
         public UsageStatsViewHolder(View view) {
             super(view);
             packageNameTextView = view.findViewById(R.id.package_name);
             timeTextView = view.findViewById(R.id.time);
             appIconImageView = view.findViewById(R.id.app_icon);
+            productivityTextView = view.findViewById(R.id.productivity_tag);
         }
     }
 }

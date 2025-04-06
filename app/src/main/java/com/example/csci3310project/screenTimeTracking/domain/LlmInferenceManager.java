@@ -18,7 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-// Reference: 管理工作 https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/manage-work?hl=zh-tw
+// My Reference: 管理工作 https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/manage-work?hl=zh-tw
 // In our app, the LLM model is initialized in a background thread using WorkManager.
 // The LLMInferenceManager class manages the initialization and inference of the LLM model.
 // There will be a lot of inference request during the first launch of the app, because we need to classify all installed apps.
@@ -76,18 +76,16 @@ public class LlmInferenceManager {
                         ExistingWorkPolicy.KEEP,
                         initRequest);
 
-        // Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
+        // My Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
         // Use main thread for LiveData operations
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-        mainHandler.post(() -> {
-            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(initRequest.getId())
-                    .observeForever(workInfo -> {
-                        if (workInfo != null && workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                            modelReadyState.postValue(true);
-                            Log.d(TAG, "Model initialization succeeded");
-                        }
-                    });
-        });
+        mainHandler.post(() -> WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(initRequest.getId())
+                .observeForever(workInfo -> {
+                    if (workInfo != null && workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        modelReadyState.postValue(true);
+                        Log.d(TAG, "Model initialization succeeded");
+                    }
+                }));
     }
 
     @SuppressLint("EnqueueWork")
@@ -122,34 +120,32 @@ public class LlmInferenceManager {
 
         // Observe work result to deliver back to callback
         // each generateResponseAsync will create a new work request and observe that request
-        // Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
+        // My Reference: 报错： Cannot invoke observe on a background thread, https://blog.csdn.net/css33/article/details/108851051
         // Use main thread for LiveData operations
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-        mainHandler.post(() -> {
-            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
-                    .observeForever(workInfo -> {
-                        if (workInfo == null) return;
+        mainHandler.post(() -> WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
+                .observeForever(workInfo -> {
+                    if (workInfo == null) return;
 
-                        if (workInfo.getState().isFinished()) {
-                            ResponseCallback storedCallback = callbackMap.remove(inferenceRequest.getId());
+                    if (workInfo.getState().isFinished()) {
+                        ResponseCallback storedCallback = callbackMap.remove(inferenceRequest.getId());
 
-                            // Reference: Android --- observer和observerForever的区别 https://blog.csdn.net/qq_43290288/article/details/141862177
-                            // Clean up observer to prevent leaks
-                            WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
-                                    .removeObserver(observer -> {});
+                        // My Reference: Android --- observer和observerForever的区别 https://blog.csdn.net/qq_43290288/article/details/141862177
+                        // Clean up observer to prevent leaks
+                        WorkManager.getInstance(appContext).getWorkInfoByIdLiveData(inferenceRequest.getId())
+                                .removeObserver(observer -> {});
 
-                            if (storedCallback != null) {
-                                if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                                    String result = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_RESULT);
-                                    storedCallback.onResponse(result != null ? result : "No response generated");
-                                } else if (workInfo.getState() == WorkInfo.State.FAILED) {
-                                    String error = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_ERROR);
-                                    storedCallback.onError(error != null ? error : "Unknown error");
-                                }
+                        if (storedCallback != null) {
+                            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                                String result = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_RESULT);
+                                storedCallback.onResponse(result != null ? result : "No response generated");
+                            } else if (workInfo.getState() == WorkInfo.State.FAILED) {
+                                String error = workInfo.getOutputData().getString(LlmInferenceWorker.KEY_ERROR);
+                                storedCallback.onError(error != null ? error : "Unknown error");
                             }
                         }
-                    });
-        });
+                    }
+                }));
 
         WorkManager.getInstance(appContext).enqueue(inferenceRequest);
     }

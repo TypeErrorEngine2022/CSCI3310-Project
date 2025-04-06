@@ -9,7 +9,7 @@ import android.util.Log;
 
 public class AppUtils {
     private static  final String TAG = "AppUtils";
-    // reference: https://stackoverflow.com/questions/17985500/how-can-i-get-the-applications-icon-from-the-package-name
+    // My Reference: https://stackoverflow.com/questions/17985500/how-can-i-get-the-applications-icon-from-the-package-name
     public static Drawable getAppIcon(Context context, String packageName) {
         try {
             return context.getPackageManager().getApplicationIcon(packageName);
@@ -19,7 +19,7 @@ public class AppUtils {
         return null;
     }
 
-    // reference: https://blog.csdn.net/qq_37858386/article/details/124501617
+    // My Reference: https://blog.csdn.net/qq_37858386/article/details/124501617
     public static boolean isSystemApp(Context context, String packageName) {
         try {
             final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_CONFIGURATIONS);
@@ -31,7 +31,7 @@ public class AppUtils {
         }
     }
 
-    // Reference: Android应用层PackageManager的使用 https://www.cnblogs.com/dony-c/p/9478115.html
+    // My Reference: Android应用层PackageManager的使用 https://www.cnblogs.com/dony-c/p/9478115.html
     public static String getAppName(Context context, String packageName) {
         PackageManager packageManager = context.getPackageManager();
         try {
