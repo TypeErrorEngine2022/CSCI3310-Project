@@ -11,20 +11,18 @@ import android.graphics.drawable.Drawable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.csci3310project.screenTimeTracking.data.AppCategory;
 import com.example.csci3310project.screenTimeTracking.data.UsageEntity;
 import com.example.csci3310project.screenTimeTracking.data.UsageRepository;
 import com.example.csci3310project.screenTimeTracking.ui.UsageStatUIModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class UsageStatsUseCase {
     private final UsageRepository usageRepository;
     private final Context context;
-    private final Executor executor = Executors.newSingleThreadExecutor();
 
     public UsageStatsUseCase(UsageRepository usageRepository, Context context) {
         this.usageRepository = usageRepository;
@@ -39,13 +37,13 @@ public class UsageStatsUseCase {
             String appName = getAppName(context, fullPackageName);
             Drawable appIcon = getAppIcon(context, fullPackageName);
             UsageEntity appEntity = usageRepository.getAppSync(fullPackageName);
-            boolean isProductive = appEntity != null && appEntity.isProductiveApp();
+            String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
 
             UsageStatUIModel uiModel = new UsageStatUIModel(
                     appName,
                     stats.getTotalTimeInForeground(),
                     appIcon,
-                    isProductive
+                    appCategory
             );
             result.add(uiModel);
         }
@@ -62,13 +60,13 @@ public class UsageStatsUseCase {
                 String appName = getAppName(context, fullPackageName);
                 Drawable appIcon = getAppIcon(context, fullPackageName);
                 UsageEntity appEntity = findUsageEntityByPackageName(usageEntities, fullPackageName);
-                boolean isProductive = appEntity != null && appEntity.isProductiveApp();
+                String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
 
                 UsageStatUIModel uiModel = new UsageStatUIModel(
                         appName,
                         stats.getTotalTimeInForeground(),
                         appIcon,
-                        isProductive
+                        appCategory
                 );
                 result.add(uiModel);
             }

@@ -27,10 +27,6 @@ public class UsageEntity {
     public UsageEntity() {
         this.packageName = "";
         this.totalMsInForeground = 0;
-        this.app_category = "unclassified";
-    }
-
-    public boolean isProductiveApp() {
-        return app_category.equals("productive");
+        this.app_category = AppCategory.UNCLASSIFIED.getValue();
     }
 }

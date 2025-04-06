@@ -9,13 +9,13 @@ public class UsageStatUIModel {
 
     private final String formattedTime;
 
-    private final boolean isProductive;
+    private final String app_category;
 
-    public UsageStatUIModel(String appName, long totalMsInForeground, Drawable appIcon, boolean isProductive) {
+    public UsageStatUIModel(String appName, long totalMsInForeground, Drawable appIcon, String app_category) {
         this.appName = appName;
         this.appIcon = appIcon;
         this.formattedTime = formatTime(totalMsInForeground);
-        this.isProductive = isProductive;
+        this.app_category = app_category;
     }
 
     public String getAppName() {
@@ -50,7 +50,7 @@ public class UsageStatUIModel {
         return formattedTime;
     }
 
-    public boolean isProductive() {
-        return isProductive;
+    public String getAppCategory() {
+        return app_category;
     }
 }
