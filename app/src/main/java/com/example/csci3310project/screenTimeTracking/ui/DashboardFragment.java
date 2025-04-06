@@ -21,6 +21,10 @@ public class DashboardFragment extends Fragment {
     private RecyclerView usageStatsRecyclerView;
     private ProgressBar loadingProgressBar;
 
+    private boolean isFirstTimeInit;
+
+    private ViewModelProvider viewModelProvider;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -29,6 +33,7 @@ public class DashboardFragment extends Fragment {
         usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
         usageStatsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         loadingProgressBar = view.findViewById(R.id.dashboard_progress_bar);
+        isFirstTimeInit = true;
 
         showLoading(true);
 
@@ -42,7 +47,8 @@ public class DashboardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        DashboardViewModel viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        viewModelProvider = new ViewModelProvider(this);
+        DashboardViewModel viewModel = viewModelProvider.get(DashboardViewModel.class);
         adapter = new UsageStatsAdapter(new ArrayList<>());
         usageStatsRecyclerView.setAdapter(adapter);
 
@@ -52,6 +58,22 @@ public class DashboardFragment extends Fragment {
             showLoading(false);
             adapter.updateData(usageStats);
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (isFirstTimeInit) {
+            isFirstTimeInit = false;
+            return;
+        }
+
+        showLoading(true);
+        // the existing viewmodel will be returned by ViewModelProvider
+        // so no need to worry that the viewmodel will be recreated
+        DashboardViewModel viewModel = viewModelProvider.get(DashboardViewModel.class);
+        viewModel.refreshData();
     }
 
     private void showLoading(boolean isLoading) {
