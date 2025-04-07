@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-1. Download the `gemma3-1b-it-int4.task` model (555 MB) from [litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT/tree/main).
+1. Go to [Model card](https://huggingface.co/litert-community/Gemma3-1B-IT) to acknowledge the license before downloading the model. Then, navigate to [litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT/tree/main) to download `gemma3-1b-it-int4.task` model (555 MB).
 2. Place the model in the `app/src/main/assets/models/` folder. Create the `assets/models/` subdirectories if they don’t exist.
 
-## ScreenTime Tracking Features
+## ScreenTime Tracking Features (Section 1)
 
 1. **Track the time spent on each app today**
    - refreshes automatically on app resume.
@@ -74,3 +74,20 @@ This app helps you maintain a healthy balance in your digital life by enforcing 
 4. Press "Save" to apply your new settings
 
 Note: Settings cannot be changed while monitoring is active. Stop monitoring first, then adjust settings.
+
+## Posture alert features
+The hardest and most important part of the neck posture system in our application is the implementation of it, the stuff that happens on the backend. As such, the first priority in creating this section of the app was to do the implementation of the computer vision model and the implementation of the algorithm, before adding in any functionality such as notifications or background refresh.
+
+An implementation of MediaPipe (computer vision) and OpenCV was successfully implemented, and a live camera preview feed of the front facing camera was added to the frontend to test the functionality. An implementation of using the TYPE_ROTATION_VECTOR sensor was also added to determine the device pitch angle
+
+Here is a brief explanation of how it functions.
+
+Using the MediaPipe computer vision model, the backend system is able to in real-time detect the user's face, recognise and map out the facial landmarks on their face. Through OpenCV, the facial landmarks are then used to calculate the rotational vector of their head, which is then converted to a rotational matrix and finally converted to Euler pitch angles. This determines the user's head pitch angle relative to their device.
+
+The TYPE_ROTATION_VECTOR sensor is used to extract a rotational matrix of the device. This is then also converted to Euler pitch angles to determine the device's pitch angle.
+
+The two angles are combined to get a good estimation of what the user's head pitch angle relative to the ground is.
+
+So far the biggest deviations from the initial project plan was that MediaPipe was used as the computer vision model instead of ML Kit. ML Kit was tried and although it was significantly simpler to implement, as it had built in functionality to extra pitch angles, it was really inaccurate. MediaPipe was used as an alternative. The TYPE_ROTATION_VECTOR was also used instead of the original planned accelerometer + gyroscope, but the type rotation vector sensor is effectively just a combination of accelerometer and gyroscope values, so it's not too different.
+
+The next steps will be to use the implemented head pitch angle detection system to add in functionality such as detection when the app isn't in focus and notifications when the head angle remains unhealthy for a long period.
