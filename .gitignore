@@ -9,3 +9,32 @@
 .cxx
 local.properties
 /app/src/main/assets/models/gemma3-1b-it-int4.task
+
+# OpenCV
+OpenCV/build/
+
+# from model
+/app/src/main/assets/models/
+
+*.log
+
+# from model
+*.class
+*.dex
+*.apk
+*.aab
+*.ap_
+*.jar
+
+.idea/
+.vscode/
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+
+Thumbs.db
+desktop.ini

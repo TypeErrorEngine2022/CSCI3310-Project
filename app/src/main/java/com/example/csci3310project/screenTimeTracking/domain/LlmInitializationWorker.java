@@ -45,7 +45,7 @@ public class LlmInitializationWorker extends Worker {
 
             LlmInference.LlmInferenceOptions options = LlmInference.LlmInferenceOptions.builder()
                     .setModelPath(modelPath)
-                    .setPreferredBackend(LlmInference.Backend.GPU)
+                    .setPreferredBackend(LlmInference.Backend.CPU)
                     .build();
 
             llmInference = LlmInference.createFromOptions(getApplicationContext(), options);
