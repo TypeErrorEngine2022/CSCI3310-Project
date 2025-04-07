@@ -1,2 +1,0 @@
-ninja: Entering directory `C:\Users\User\CSCI3310-Project\OpenCV\.cxx\Debug\34344f46\arm64-v8a'
-ninja: no work to do.
