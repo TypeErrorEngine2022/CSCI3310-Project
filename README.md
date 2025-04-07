@@ -30,7 +30,7 @@
 2. **QUERY_ALL_PACKAGES**: Required to get the app name and icon
    - will be automatically granted on launch
 
-## Time Break Features
+## Time Break Features (Section 2)
 
 This app helps you maintain a healthy balance in your digital life by enforcing regular breaks based on your app usage patterns.
 
@@ -75,7 +75,7 @@ This app helps you maintain a healthy balance in your digital life by enforcing 
 
 Note: Settings cannot be changed while monitoring is active. Stop monitoring first, then adjust settings.
 
-## Posture alert features
+## Posture alert features (Section 3)
 The hardest and most important part of the neck posture system in our application is the implementation of it, the stuff that happens on the backend. As such, the first priority in creating this section of the app was to do the implementation of the computer vision model and the implementation of the algorithm, before adding in any functionality such as notifications or background refresh.
 
 An implementation of MediaPipe (computer vision) and OpenCV was successfully implemented, and a live camera preview feed of the front facing camera was added to the frontend to test the functionality. An implementation of using the TYPE_ROTATION_VECTOR sensor was also added to determine the device pitch angle
