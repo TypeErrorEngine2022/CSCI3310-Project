@@ -2,48 +2,82 @@ package com.example.csci3310project.screenTimeTracking.ui;
 
 import android.os.Bundle;
 import android.view.*;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.csci3310project.R;
-import com.example.csci3310project.screenTimeTracking.data.UsageEntity;
-import com.example.csci3310project.screenTimeTracking.data.UsageRepository;
-import com.example.csci3310project.screenTimeTracking.data.UsageStatsDataSource;
-import com.example.csci3310project.screenTimeTracking.domain.UsageStatsUseCase;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DashboardFragment extends Fragment {
-    UsageStatsUseCase usageStatsUseCase;
+    private UsageStatsAdapter adapter;
+
+    private RecyclerView usageStatsRecyclerView;
+    private ProgressBar loadingProgressBar;
+
+    private boolean isFirstTimeInit;
+
+    private ViewModelProvider viewModelProvider;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.section1_dashboard, container, false);
 
-        usageStatsUseCase = new UsageStatsUseCase(new UsageRepository(new UsageStatsDataSource(getContext())));
+        usageStatsRecyclerView = view.findViewById(R.id.usage_stats_recycler_view);
+        usageStatsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        loadingProgressBar = view.findViewById(R.id.dashboard_progress_bar);
+        isFirstTimeInit = true;
 
-        ListView usageStatsList = view.findViewById(R.id.usage_stats_list);
-        List<String> usageStatsData = getUsageStatsData();
+        showLoading(true);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_list_item_1, usageStatsData);
-        usageStatsList.setAdapter(adapter);
+        adapter = new UsageStatsAdapter(new ArrayList<>());
+        usageStatsRecyclerView.setAdapter(adapter);
 
         return view;
     }
 
-    private List<String> getUsageStatsData() {
-        List<UsageEntity> usageStatsList = usageStatsUseCase.getDailyUsageStats();
-        List<String> usageStatsData = new ArrayList<>();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        for (UsageEntity entity : usageStatsList) {
-            usageStatsData.add("Package: " + entity.packageName + ", Time: " + entity.totalMsInForeground / 1000 + " seconds");
+        viewModelProvider = new ViewModelProvider(this);
+        DashboardViewModel viewModel = viewModelProvider.get(DashboardViewModel.class);
+        adapter = new UsageStatsAdapter(new ArrayList<>());
+        usageStatsRecyclerView.setAdapter(adapter);
+
+        // the reason to observer usage stat, instead of getting static list
+        // because the background service will classify the app, which will update the item
+        viewModel.getUsageStats().observe(getViewLifecycleOwner(), usageStats -> {
+            showLoading(false);
+            adapter.updateData(usageStats);
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (isFirstTimeInit) {
+            isFirstTimeInit = false;
+            return;
         }
 
-        return usageStatsData;
+        showLoading(true);
+        // the existing viewmodel will be returned by ViewModelProvider
+        // so no need to worry that the viewmodel will be recreated
+        DashboardViewModel viewModel = viewModelProvider.get(DashboardViewModel.class);
+        viewModel.refreshData();
+    }
+
+    private void showLoading(boolean isLoading) {
+        loadingProgressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        usageStatsRecyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
     }
 }

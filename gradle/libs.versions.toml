@@ -7,6 +7,8 @@ appcompat = "1.7.0"
 material = "1.12.0"
 roomRuntime = "2.6.1"
 roomCompiler = "2.6.1"
+tasksGenai = "0.10.22"
+workRuntime = "2.10.0"
 cameraLifecycle = "1.4.2"
 cameraView = "1.4.2"
 litertSupportApi = "1.2.0"
@@ -19,6 +21,8 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+tasks-genai = { module = "com.google.mediapipe:tasks-genai", version.ref = "tasksGenai" }
+work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
 camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
 litert-support-api = { group = "com.google.ai.edge.litert", name = "litert-support-api", version.ref = "litertSupportApi" }
