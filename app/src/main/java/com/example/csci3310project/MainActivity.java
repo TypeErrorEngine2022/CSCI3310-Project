@@ -1,6 +1,7 @@
 package com.example.csci3310project;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.*;
 import androidx.appcompat.widget.Toolbar;
@@ -10,6 +11,8 @@ import androidx.fragment.app.Fragment;
 
 import com.example.csci3310project.screenTimeTracking.ui.ScreenTimeTrackingFragment;
 import com.google.android.material.navigation.NavigationView;
+
+import org.opencv.android.OpenCVLoader;
 
 public class MainActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
@@ -22,6 +25,12 @@ public class MainActivity extends AppCompatActivity {
         // Setup Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        if (OpenCVLoader.initLocal()) {
+            Log.i("OpenCV", "OpenCV loaded successfully");
+        } else {
+            Log.e("OpenCV", "OpenCV initialization failed!");
+        }
 
         // Setup Navigation Drawer
         drawerLayout = findViewById(R.id.drawer_layout);

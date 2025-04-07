@@ -3,6 +3,8 @@ package com.example.csci3310project;
 import android.os.Bundle;
 import android.view.*;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.csci3310project.screenTimeTracking.ui.DashboardFragment;
@@ -12,7 +14,7 @@ public class Section3Fragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.section1, container, false);
+        View view = inflater.inflate(R.layout.section3, container, false);
 
         BottomNavigationView bottomNav = view.findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
@@ -42,5 +44,11 @@ public class Section3Fragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
     }
 }
