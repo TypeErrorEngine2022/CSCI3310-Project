@@ -88,6 +88,8 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
 
         usageStatsManager = (UsageStatsManager) getActivity().getSystemService(Context.USAGE_STATS_SERVICE);
 
+        AppCategorizationUtils.initRepository(getActivity());
+
         // Create notification channel
         createNotificationChannel();
 
