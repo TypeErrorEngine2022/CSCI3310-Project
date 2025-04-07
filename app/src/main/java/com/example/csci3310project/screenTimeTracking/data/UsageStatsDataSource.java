@@ -3,7 +3,6 @@ package com.example.csci3310project.screenTimeTracking.data;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
-import android.util.Log;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ public class UsageStatsDataSource {
         this.usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
     }
 
-    // reference: https://stackoverflow.com/questions/22990067/how-to-extract-epoch-from-localdate-and-localdatetime
+    // My Reference: https://stackoverflow.com/questions/22990067/how-to-extract-epoch-from-localdate-and-localdatetime
     private long getEpochsFromLocalDateTime (LocalDateTime localDateTime) {
         ZoneId zoneId = ZoneId.systemDefault();
         return localDateTime.atZone(zoneId).toEpochSecond(); // this is in seconds!!! not milliseconds!!!

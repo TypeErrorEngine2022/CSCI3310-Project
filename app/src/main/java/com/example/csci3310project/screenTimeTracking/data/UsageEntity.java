@@ -17,13 +17,16 @@ public class UsageEntity {
     @ColumnInfo(name = "total_ms_in_foreground")
     public long totalMsInForeground;
 
+    @ColumnInfo(name = "app_icon_uri")
+    public String appIconUri;
+
+    @ColumnInfo(name = "app_category")
+    @NonNull
+    public String app_category;
+
     public UsageEntity() {
         this.packageName = "";
         this.totalMsInForeground = 0;
-    }
-
-    public UsageEntity(@NonNull String packageName, long totalMsInForeground) {
-        this.packageName = packageName;
-        this.totalMsInForeground = totalMsInForeground;
+        this.app_category = AppCategory.UNCLASSIFIED.getValue();
     }
 }

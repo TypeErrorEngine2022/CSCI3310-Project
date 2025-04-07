@@ -48,6 +48,10 @@ dependencies {
 //    androidTestImplementation(libs.espresso.core)
     annotationProcessor(libs.room.compiler)
 
+    // screen time tracking
+    implementation(libs.tasks.genai)
+    implementation(libs.work.runtime)
+    
     // CameraX
     implementation("androidx.camera:camera-core:1.3.3")
     implementation("androidx.camera:camera-camera2:1.3.3")
