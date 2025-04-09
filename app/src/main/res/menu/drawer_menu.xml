@@ -8,6 +8,6 @@
             android:title="Section 2"/>
         <item
             android:id="@+id/nav_section3"
-            android:title="Section 3"/>
+            android:title="Neck Posture Analysis"/>
     </group>
 </menu>

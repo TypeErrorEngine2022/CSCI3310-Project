@@ -1,3 +1,87 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="6pt"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Switch
+            android:id="@+id/posture_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8pt"
+            android:layout_marginHorizontal="6pt"
+            android:textSize="9pt"
+            android:text="Turn on/off Posture Analysis" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3pt"
+            android:layout_marginHorizontal="6pt"
+            android:text="We have to access the front-facing camera in order to detect your head posture" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6pt"
+            android:text="This feature runs 100% offline and no identifying data is stored. Even so, users are free to opt-out of it." />
+
+        <Spinner
+            android:id="@+id/interval_spinner"
+            android:layout_width="match_parent"
+            android:layout_marginHorizontal="6pt"
+            android:layout_marginTop="6pt"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6pt"
+            android:text="This is how often the system analyses your posture." />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2pt"
+            android:layout_marginHorizontal="6pt"
+            android:text="The smaller the interval, the more accurate the detection will be, but the more battery it will drain. Select real-time for the best accuracy!" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8pt"
+            android:layout_marginHorizontal="6pt"
+            android:background="@android:color/darker_gray" />
+
+        <Switch
+            android:id="@+id/notification_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="8pt"
+            android:layout_marginHorizontal="6pt"
+            android:text="Receive posture notifications" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6pt"
+            android:text="Turn this on to be alerted when bad posture is detected!" />
+
+        <Spinner
+            android:id="@+id/tolerance_spinner"
+            android:layout_width="match_parent"
+            android:layout_marginTop="6pt"
+            android:layout_marginHorizontal="6pt"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6pt"
+            android:text="A lower tolerance makes it more sensitive to bad posture. " />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

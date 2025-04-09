@@ -13,6 +13,7 @@
 
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
 
     <application
@@ -40,6 +41,9 @@
             android:name="com.example.csci3310project.TimeBreakUtils.MonitoringService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <service
+            android:name="com.example.csci3310project.PostureService"
+            android:foregroundServiceType="camera" />
     </application>
 
 </manifest>

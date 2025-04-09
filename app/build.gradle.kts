@@ -91,5 +91,7 @@ dependencies {
     androidTestImplementation ("androidx.test.espresso:espresso-core:3.4.0")
 
     implementation ("com.google.mediapipe:tasks-vision:0.10.14")
-    //implementation ("org.opencv:opencv-android:4.8.0")
+    //implementation ("org.opencv:opencv-android:4.8.0"
+
+    implementation ("androidx.lifecycle:lifecycle-service:2.6.2")
 }

@@ -2,12 +2,12 @@
     >
 
     <item
-        android:id="@+id/page_3a"
-        android:title="Page 3A"
+        android:id="@+id/page_3b"
+        android:title="Options"
         android:icon="@drawable/settings_24px"/>
     <!--    choose icon from https://fonts.google.com/icons?icon.size=24&icon.color=%23e3e3e3&icon.platform=android -->
     <item
-        android:id="@+id/page_3b"
-        android:title="Page 3B"
-        android:icon="@drawable/settings_24px"/>
+        android:id="@+id/page_3a"
+        android:title="Preview"
+        android:icon="@drawable/photo_camera_24px"/>
 </menu>
