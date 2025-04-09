@@ -2,21 +2,14 @@ package com.example.csci3310project;
 
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
-import android.media.Image;
 import android.os.Bundle;
-import android.os.FileUtils;
 import android.os.SystemClock;
 import android.util.Log;
-import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.Manifest;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import android.hardware.Sensor;
@@ -46,12 +39,10 @@ import com.google.mediapipe.framework.image.MediaImageBuilder;
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark;
 import com.google.mediapipe.tasks.core.BaseOptions;
 import com.google.mediapipe.tasks.vision.core.RunningMode;
-import com.google.mediapipe.tasks.vision.*;
 
 import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarker;
 import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarkerResult;
 
-import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
@@ -59,36 +50,28 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
-import org.opencv.imgproc.Imgproc;
-import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.support.common.FileUtil;
 
-
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
-import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 
-
-public class Page3AFragment extends Fragment {
+public class PosturePreviewFragment extends Fragment {
     // UI Elements
     private PreviewView previewView;
-    private TextView faceTiltView, finalTiltView, deviceTiltView;
 
     // Camera/Sensor
     private ProcessCameraProvider cameraProvider;
     private SensorManager sensorManager;
     private Sensor rotationVectorSensor;
     private float devicePitchDegrees = 0;
+
+    private FrameLayout bottomPanel;
+    private TextView tvFaceTiltValue;
+    private TextView tvDeviceTiltValue;
+    private TextView tvFinalTiltValue;
 
     // MediaPipe
     private FaceLandmarker faceLandmarker;
@@ -110,10 +93,11 @@ public class Page3AFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        bottomPanel = view.findViewById(R.id.bottomPanel);
         previewView = view.findViewById(R.id.previewView);
-        faceTiltView = view.findViewById(R.id.faceAngle);
-        finalTiltView = view.findViewById(R.id.finalAngle);
-        deviceTiltView = view.findViewById(R.id.deviceAngle);
+        tvFaceTiltValue = view.findViewById(R.id.tvFaceTiltValue);
+        tvDeviceTiltValue = view.findViewById(R.id.tvDeviceTiltValue);
+        tvFinalTiltValue = view.findViewById(R.id.tvFinalTiltValue);
 
         SensorManager sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
 
@@ -189,10 +173,7 @@ public class Page3AFragment extends Fragment {
     };
 
     private boolean cameraPermission() {
-        if (ContextCompat.checkSelfPermission(getContext(), "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        return true;
+        return ContextCompat.checkSelfPermission(getContext(), "android.permission.CAMERA") == PackageManager.PERMISSION_GRANTED;
     }
 
     private void startCamera() {
@@ -298,12 +279,19 @@ public class Page3AFragment extends Fragment {
     }
 
     private void updateUI(float faceTilt, float deviceTilt) {
-
         float totalTilt = faceTilt + deviceTilt;
         getActivity().runOnUiThread(() -> {
-            faceTiltView.setText(String.format("Neck Tilt: %.1f°", faceTilt));
-            finalTiltView.setText(String.format("Final Tilt: %.1f°", totalTilt));
-            deviceTiltView.setText(String.format("Device Tilt: %.1f°", deviceTilt));
+            tvFaceTiltValue.setText(String.format("%.1f°", faceTilt));
+            tvDeviceTiltValue.setText(String.format("%.1f°", deviceTilt));
+            tvFinalTiltValue.setText(String.format("%.1f°", totalTilt));
+
+            if (totalTilt >= 77) {
+                bottomPanel.setBackgroundResource(R.drawable.outline_green);
+            } else if (totalTilt >= 65) {
+                bottomPanel.setBackgroundResource(R.drawable.outline_yellow);
+            } else {
+                bottomPanel.setBackgroundResource(R.drawable.outline_red);
+            }
         });
     }
 }

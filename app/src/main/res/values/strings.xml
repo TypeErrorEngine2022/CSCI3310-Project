@@ -1,5 +1,25 @@
 <resources>
+    <!-- General App Strings -->
     <string name="app_name">csci3310project</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- -->
+
+
+    <!-- Posture Analysis Strings -->
+    <string-array name="interval_options">
+        <item>Real-time</item>
+        <item>5 seconds</item>
+        <item>10 seconds</item>
+        <item>15 seconds</item>
+        <item>30 seconds</item>
+        <item>1 minute</item>
+    </string-array>
+
+    <string-array name="tolerance_options">
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
+    </string-array>
 </resources>
