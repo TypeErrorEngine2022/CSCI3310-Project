@@ -74,39 +74,44 @@ public class PostureService extends LifecycleService {
     public void onCreate() {
         Log.d("My_debug","Posture Service java onCreate");
         super.onCreate();
-        // Start foreground notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "posture_channel",
-                    "Posture Analysis",
-                    NotificationManager.IMPORTANCE_HIGH
-            );
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-        Notification notification = new NotificationCompat.Builder(this, "posture_channel")
-                .setContentTitle("Posture Analysis")
-                .setContentText("Running in background")
-                .setSmallIcon(R.drawable.face_shake_24px)
-                .build();
-        startForeground(1, notification);
-        Log.d("My_debug", "running in background notification sent");
-
-        // Initialize camera
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderFuture.addListener(() -> {
-            try {
-                cameraProvider = cameraProviderFuture.get();
-                setupCamera();
-            } catch (ExecutionException | InterruptedException e) {
-                Log.e("PostureService", "Camera initialization failed", e);
+//        if (getSettingsFromDatabase().postureAnalysisEnabled == true) {
+            Log.d("My_debug", "postureAnalysisEnabled == true");
+            // Start foreground notification
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        "posture_channel",
+                        "Posture Analysis",
+                        NotificationManager.IMPORTANCE_HIGH
+                );
+                NotificationManager notificationManager = getSystemService(NotificationManager.class);
+                notificationManager.createNotificationChannel(channel);
             }
-        }, ContextCompat.getMainExecutor(this));
+            Notification notification = new NotificationCompat.Builder(this, "posture_channel")
+                    .setContentTitle("Posture Analysis")
+                    .setContentText("Running in background")
+                    .setSmallIcon(R.drawable.face_shake_24px)
+                    .build();
+            startForeground(1, notification);
+            Log.d("My_debug", "running in background notification sent");
 
-        // Initialize sensors
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        sensorManager.registerListener(sensorListener, rotationVectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            // Initialize camera
+            ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+            cameraProviderFuture.addListener(() -> {
+                try {
+                    cameraProvider = cameraProviderFuture.get();
+                    setupCamera();
+                } catch (ExecutionException | InterruptedException e) {
+                    Log.e("PostureService", "Camera initialization failed", e);
+                }
+            }, ContextCompat.getMainExecutor(this));
+
+            // Initialize sensors
+            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            sensorManager.registerListener(sensorListener, rotationVectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        } else {
+//            Log.d("My_debug", "postureAnalysisEnabled == false");
+//        }
     }
 
     private UserSettings getSettingsFromDatabase() {
