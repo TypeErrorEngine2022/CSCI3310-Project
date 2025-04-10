@@ -17,9 +17,9 @@ public class UserSettings {
         return "UserSettings{" +
                 "id=" + id +
                 ", postureAnalysisEnabled=" + postureAnalysisEnabled +
-                ", checkInterval='" + checkInterval + '\'' +
+                ", checkInterval='" + (checkInterval != null ? checkInterval : "not set") + '\'' +
                 ", notificationsEnabled=" + notificationsEnabled +
-                ", toleranceLevel='" + toleranceLevel + '\'' +
+                ", toleranceLevel='" + (toleranceLevel != null ? toleranceLevel : "not set") + '\'' +
                 '}';
     }
 }
