@@ -19,14 +19,11 @@ public class PromptGenerator {
         prompt.append(title).append("[");
         for (int i = 0; i < Math.min(5, apps.size()); i++) {
             UsageStatAnalysisItem app = apps.get(i);
-            prompt
-                    .append("`")
-                    .append(app.getAppName())
-                    .append("(")
-                    .append(app.getAppDescription())
-                    .append(") ")
-                    .append(app.getFormattedTime())
-                    .append("`,");
+            prompt.append("`").append(app.getAppName()).append(" ");
+            if (app.getAppDescription() != null && !app.getAppDescription().isEmpty()) {
+                prompt.append("(").append(app.getAppDescription()).append(")");
+            }
+            prompt.append(app.getFormattedTime()).append("`,");
         }
         if (apps.size() > 1) {
             prompt.setLength(prompt.length() - 1); // remove the last comma of the last item
