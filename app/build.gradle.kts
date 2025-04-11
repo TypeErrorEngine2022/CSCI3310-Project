@@ -51,6 +51,7 @@ dependencies {
     // screen time tracking
     implementation(libs.tasks.genai)
     implementation(libs.work.runtime)
+    implementation(libs.core)
     
     // CameraX
     implementation("androidx.camera:camera-core:1.3.3")

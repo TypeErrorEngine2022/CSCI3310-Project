@@ -24,6 +24,8 @@ import com.example.csci3310project.screenTimeTracking.domain.LlmInferenceManager
 import com.example.csci3310project.screenTimeTracking.domain.PromptGenerator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.noties.markwon.Markwon;
+
 public class RewardFragment extends Fragment {
     private final String TAG = "RewardFragment";
 
@@ -34,6 +36,7 @@ public class RewardFragment extends Fragment {
     private final AtomicBoolean isGeneratingComment = new AtomicBoolean(false);
     private LlmInferenceManager llmInferenceManager;
     private String resultReceivedWhilePaused = null;
+    private Markwon markwon;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -44,6 +47,7 @@ public class RewardFragment extends Fragment {
         progressBar = view.findViewById(R.id.progress_bar);
         retryButton = view.findViewById(R.id.reward_retry_button);
         shareButton = view.findViewById(R.id.reward_share_button);
+        markwon = Markwon.create(requireContext());
         return view;
     }
 
@@ -106,7 +110,7 @@ public class RewardFragment extends Fragment {
             if (latestComment != null) {
                 Log.d(TAG, "Using cached comment: " + latestComment);
                 hideLoading();
-                outputTextView.setText(latestComment);
+                markwon.setMarkdown(outputTextView, latestComment);
                 isGeneratingComment.set(false);
                 retryButton.setVisibility(View.VISIBLE);
                 shareButton.setVisibility(View.VISIBLE);
@@ -141,7 +145,7 @@ public class RewardFragment extends Fragment {
                     if (isAdded() && isResumed()) {
                         requireActivity().runOnUiThread(() -> {
                             hideLoading();
-                            outputTextView.setText(response);
+                            markwon.setMarkdown(outputTextView, response);
                             isGeneratingComment.set(false);
                             retryButton.setVisibility(View.VISIBLE);
                             shareButton.setVisibility(View.VISIBLE);
@@ -248,7 +252,7 @@ public class RewardFragment extends Fragment {
                 String errorMessage = resultReceivedWhilePaused.substring(7); // Remove "ERROR: " prefix
                 outputTextView.setText("Sorry, couldn't generate analysis: " + errorMessage);
             } else {
-                outputTextView.setText(resultReceivedWhilePaused);
+                markwon.setMarkdown(outputTextView, resultReceivedWhilePaused);
             }
             retryButton.setVisibility(View.VISIBLE);
             shareButton.setVisibility(View.VISIBLE);
