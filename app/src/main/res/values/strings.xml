@@ -5,6 +5,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="retry">retry</string>
     <string name="share">Share</string>
+    <string name="section1_dashboard">Dashboard</string>
+    <string name="section1_analysis">Analysis</string>
 
     <!-- -->
 
