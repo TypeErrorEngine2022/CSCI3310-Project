@@ -14,5 +14,8 @@
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:menu="@menu/section3_nav"/>
+        android:background="@color/white"
+        app:menu="@menu/section3_nav"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"/>
 </LinearLayout>
