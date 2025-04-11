@@ -15,6 +15,8 @@ public class AppUtils {
             return context.getPackageManager().getApplicationIcon(packageName);
         } catch (PackageManager.NameNotFoundException e) {
             Log.e(TAG, "Package not found: " + packageName, e);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting app icon: " + packageName, e);
         }
         return null;
     }
