@@ -30,7 +30,7 @@ public class RewardFragment extends Fragment {
     private TextView outputTextView;
     private ProgressBar progressBar;
 
-    private Button retryButton;
+    private Button retryButton, shareButton;
     private final AtomicBoolean isGeneratingComment = new AtomicBoolean(false);
     private LlmInferenceManager llmInferenceManager;
     private String resultReceivedWhilePaused = null;
@@ -43,12 +43,14 @@ public class RewardFragment extends Fragment {
         outputTextView = view.findViewById(R.id.reward_output_text);
         progressBar = view.findViewById(R.id.progress_bar);
         retryButton = view.findViewById(R.id.reward_retry_button);
+        shareButton = view.findViewById(R.id.reward_share_button);
         return view;
     }
 
     private void showLoading(String message) {
         progressBar.setVisibility(View.VISIBLE);
         outputTextView.setText(message);
+        shareButton.setVisibility(View.GONE);
     }
 
     private void hideLoading() {
@@ -78,6 +80,17 @@ public class RewardFragment extends Fragment {
             generateComment(true);
             retryButton.setVisibility(View.GONE);
         });
+
+        shareButton.setOnClickListener(v -> {
+            String comment = outputTextView.getText().toString();
+            if (comment.isEmpty()) {
+                return;
+            }
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, comment);
+            startActivity(Intent.createChooser(sendIntent, "Share your productivity analysis"));
+        });
     }
 
     @SuppressLint("SetTextI18n")
@@ -96,6 +109,7 @@ public class RewardFragment extends Fragment {
                 outputTextView.setText(latestComment);
                 isGeneratingComment.set(false);
                 retryButton.setVisibility(View.VISIBLE);
+                shareButton.setVisibility(View.VISIBLE);
                 return;
             }
 
@@ -104,6 +118,7 @@ public class RewardFragment extends Fragment {
                 // do nothing, the last request will update the UI when it is done
                 isGeneratingComment.set(true);
                 retryButton.setVisibility(View.VISIBLE);
+                shareButton.setVisibility(View.VISIBLE);
                 return;
             }
         } else {
@@ -129,6 +144,7 @@ public class RewardFragment extends Fragment {
                             outputTextView.setText(response);
                             isGeneratingComment.set(false);
                             retryButton.setVisibility(View.VISIBLE);
+                            shareButton.setVisibility(View.VISIBLE);
                         });
                     }
                 }
@@ -235,6 +251,7 @@ public class RewardFragment extends Fragment {
                 outputTextView.setText(resultReceivedWhilePaused);
             }
             retryButton.setVisibility(View.VISIBLE);
+            shareButton.setVisibility(View.VISIBLE);
             resultReceivedWhilePaused = null;
             return;
         }
