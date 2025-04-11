@@ -1,5 +1,6 @@
 package com.example.csci3310project;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -161,6 +162,11 @@ public class PostureService extends LifecycleService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        Log.d("My_debug", "PostureService onStartCommand() called");
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.getMemoryInfo(mi);
+        Log.d("My_debug", "Memory available: " + mi.availMem);
 //        UserSettings settings = getSettingsFromDatabase();
 //        if (settings != null && settings.postureAnalysisEnabled) {
 //            interval = parseInterval(settings.checkInterval);
@@ -296,7 +302,7 @@ public class PostureService extends LifecycleService {
 
     private double parseInterval(String intervalStr) {
         switch (intervalStr) {
-            case "Real-time": return 500;
+            case "Real-time": return 1500;
             case "5 seconds": return 5000;
             case "10 seconds": return 10000;
             case "15 seconds": return 15000;
