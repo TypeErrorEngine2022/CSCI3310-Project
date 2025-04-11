@@ -43,4 +43,24 @@ public class AppUtils {
             return packageName; // Fallback to package name if app name is not found
         }
     }
+
+    // use hours, minutes, seconds, omit the zero prefix.
+    // eg. 0 hour 0 minute 5 seconds -> 5 seconds, 0 hour 1 minute 5 seconds -> 1 minute 5 seconds
+    public static String formatTime(long totalMsInForeground) {
+        long seconds = (totalMsInForeground / 1000) % 60;
+        long minutes = (totalMsInForeground / (1000 * 60)) % 60;
+        long hours = (totalMsInForeground / (1000 * 60 * 60)) % 24;
+
+        StringBuilder timeBuilder = new StringBuilder();
+        if (hours > 0) {
+            timeBuilder.append(hours).append(" hour ");
+        }
+        if (minutes > 0) {
+            timeBuilder.append(minutes).append(" minute ");
+        }
+        if (seconds > 0) {
+            timeBuilder.append(seconds).append(" seconds");
+        }
+        return timeBuilder.toString().trim();
+    }
 }
