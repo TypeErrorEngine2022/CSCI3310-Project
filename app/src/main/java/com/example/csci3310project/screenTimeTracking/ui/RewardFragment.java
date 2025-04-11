@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -22,13 +20,8 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.csci3310project.R;
 import com.example.csci3310project.screenTimeTracking.data.CommentManager;
-import com.example.csci3310project.screenTimeTracking.data.UsageRepository;
 import com.example.csci3310project.screenTimeTracking.domain.LlmInferenceManager;
-import com.example.csci3310project.screenTimeTracking.domain.UsageStatsUseCase;
-
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.example.csci3310project.screenTimeTracking.domain.PromptGenerator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RewardFragment extends Fragment {
@@ -121,8 +114,8 @@ public class RewardFragment extends Fragment {
 
         showLoading("Getting your personalized analysis...");
 
-        getPromptAsync(requireContext(), prompt -> {
-            Log.d(TAG, "Prompt ready: " + prompt);
+        PromptGenerator.getPromptAsync(requireContext(), prompt -> {
+            Log.d(TAG, "Prompt ready:\n" + prompt);
 
             llmInferenceManager.generateResponseAsync(prompt, new LlmInferenceManager.ResponseCallback() {
                 @Override
@@ -161,43 +154,6 @@ public class RewardFragment extends Fragment {
                 }
             });
         });
-    }
-
-    private interface PromptCallback {
-        void onPromptReady(String prompt);
-    }
-
-    private static void getPromptAsync(Context context, PromptCallback callback) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            StringBuilder prompt = new StringBuilder("Assume the user's current usage time in the format [app, time] is as follows:\n{");
-            UsageStatsUseCase usageStatsUseCase = new UsageStatsUseCase(new UsageRepository(context), context);
-            List<UsageStatUIModel> usageStatsData = usageStatsUseCase.getUsageStatsSync();
-
-            for (UsageStatUIModel usageStat : usageStatsData) {
-                prompt
-                        .append(usageStat.getAppName())
-                        .append(" ")
-                        .append(usageStat.getFormattedTime())
-                        .append(",");
-            }
-
-            if (prompt.length() > 1) {
-                // Remove last comma if there's any data
-                prompt.setLength(prompt.length() - 1);
-            }
-
-            prompt.append("}\nYou are an AI assistant. Give advice on the user's productivity.\n");
-            prompt.append("Sample advice: Your screen time today is quite interesting! You spent {time} hours on {app}, which shows you are very dedicated to your work—well done! However, your usage of {app} is also a bit high, which might affect your focus. Try to shift some time to more productive activities, and you'll be even more efficient! Keep it up; you can do it!\n");
-            prompt.append("Your comment:\n");
-
-            new Handler(Looper.getMainLooper()).post(() ->
-                    callback.onPromptReady(prompt.toString())
-            );
-        });
-
-        // avoid memory leak
-        executor.shutdown();
     }
 
     private boolean checkPermissionsAndStartTracking() {
