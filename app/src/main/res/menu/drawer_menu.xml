@@ -2,7 +2,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_section1"
-            android:title="Section 1"/>
+            android:title="@string/section1_title"/>
         <item
             android:id="@+id/nav_section2"
             android:title="Section 2"/>
