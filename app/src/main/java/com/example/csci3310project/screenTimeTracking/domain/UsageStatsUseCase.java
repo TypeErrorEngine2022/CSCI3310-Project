@@ -6,7 +6,10 @@ import static com.example.csci3310project.screenTimeTracking.domain.AppUtils.isS
 
 import android.app.usage.UsageStats;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class UsageStatsUseCase {
+    private static final String TAG = "UsageStatsUseCase";
     private final UsageRepository usageRepository;
     private final Context context;
 
@@ -29,27 +33,44 @@ public class UsageStatsUseCase {
         this.context = context;
     }
 
-    public List<UsageStatUIModel> getUsageStatsSync() {
-        List<UsageStats> rawStats = getProcessUsageStats();
-        List<UsageStatUIModel> result = new ArrayList<>();
-        for (UsageStats stats : rawStats) {
-            String fullPackageName = stats.getPackageName();
-            String appName = getAppName(context, fullPackageName);
-            Drawable appIcon = getAppIcon(context, fullPackageName);
-            UsageEntity appEntity = usageRepository.getAppSync(fullPackageName);
-            String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
+    /**
+     * Must be called in a background thread.
+     */
+    public UsageStatAnalysisReport getUsageStatAnalysisReportSync() {
+        List<UsageStats> sortedStats = getProcessUsageStats();
+        List<UsageStatAnalysisItem> productivityItems = new ArrayList<>();
+        List<UsageStatAnalysisItem> nonProductivityItems = new ArrayList<>();
+        long totalProductivityTime = 0;
+        long totalNonProductivityTime = 0;
+        PackageManager packageManager = context.getPackageManager();
 
-            UsageStatUIModel uiModel = new UsageStatUIModel(
-                    fullPackageName,
-                    appName,
-                    stats.getTotalTimeInForeground(),
-                    appIcon,
-                    appCategory
-            );
-            result.add(uiModel);
+        for (UsageStats stat : sortedStats) {
+            try {
+                String packageName = stat.getPackageName();
+                String appName = getAppName(context, packageName);
+                long usage = stat.getTotalTimeInForeground();
+                String formattedTime = AppUtils.formatTime(usage);
+                UsageEntity appEntity = usageRepository.getAppSync(packageName);
+                String appCategory = appEntity != null ? appEntity.app_category : AppCategory.UNCLASSIFIED.getValue();
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+                // actually only a few number of apps have description
+                CharSequence appDescriptionSequence = applicationInfo.loadDescription(packageManager);
+                String appDescription = appDescriptionSequence != null ? appDescriptionSequence.toString() : "";
+
+                if (appCategory.equals(AppCategory.PRODUCTIVE.getValue())) {
+                    productivityItems.add(new UsageStatAnalysisItem(appName, formattedTime, appDescription));
+                    totalProductivityTime += usage;
+                } else if (appCategory.equals(AppCategory.NON_PRODUCTIVE.getValue())) {
+                    nonProductivityItems.add(new UsageStatAnalysisItem(appName, formattedTime, appDescription));
+                    totalNonProductivityTime += usage;
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(TAG, "getUsageStatAnalysisReportSync: Package not found: " + stat.getPackageName(), e);
+            }
         }
 
-        return result;
+        // Since productivityItems and nonProductivityItems are propagated by sortedStats, they are already sorted by usage time in descending order.
+        return new UsageStatAnalysisReport(productivityItems, nonProductivityItems, totalProductivityTime, totalNonProductivityTime);
     }
 
     public LiveData<List<UsageStatUIModel>> getUsageStatsLiveData() {
@@ -86,6 +107,9 @@ public class UsageStatsUseCase {
         return null;
     }
 
+    /**
+     * Get the usage stats of all apps that are not system apps and have been used today. The list is sorted by usage time in descending order.
+     */
     private List<UsageStats> getProcessUsageStats() {
         List<UsageStats> rawStats = usageRepository.getDailyUsageStats();
         rawStats = rawStats.stream()
