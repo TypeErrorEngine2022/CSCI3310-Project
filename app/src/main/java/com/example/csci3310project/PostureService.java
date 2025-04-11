@@ -63,7 +63,7 @@ public class PostureService extends LifecycleService {
     private ScheduledExecutorService scheduler;
     private int consecutiveBadPosture = 0;
     private double threshold;
-    private long interval;
+    private double interval;
     private ProcessCameraProvider cameraProvider;
     private ImageCapture imageCapture;
     private SensorManager sensorManager;
@@ -294,7 +294,7 @@ public class PostureService extends LifecycleService {
         return pitch;
     }
 
-    private long parseInterval(String intervalStr) {
+    private double parseInterval(String intervalStr) {
         switch (intervalStr) {
             case "Real-time": return 500;
             case "5 seconds": return 5000;
