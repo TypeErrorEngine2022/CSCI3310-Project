@@ -48,7 +48,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2pt"
             android:layout_marginHorizontal="6pt"
-            android:text="The smaller the interval, the more accurate the detection will be, but the more battery it will drain. Select real-time for the best accuracy!" />
+            android:text="The smaller the interval, the more accurate the detection will be, but the more battery it will drain." />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2pt"
+            android:layout_marginHorizontal="6pt"
+            android:text="Note: &quot;Real-time&quot; is resource intensive and could cause crashes on low-end devices. Setting a higher interval is recommended if performance issues are encountered." />
 
         <View
             android:layout_width="match_parent"
