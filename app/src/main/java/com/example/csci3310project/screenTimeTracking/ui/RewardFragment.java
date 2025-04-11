@@ -65,7 +65,7 @@ public class RewardFragment extends Fragment {
             }
         });
 
-        showLoading("Initializing AI model...");
+        showLoading("Initializing AI model...\nYou can leave this page while waiting.");
 
         // if the model is already initialized, generate comment immediately
         if (llmInferenceManager.isModelReady() && !isGeneratingComment.get()) {
@@ -74,7 +74,7 @@ public class RewardFragment extends Fragment {
 
         retryButton.setOnClickListener(v -> {
             outputTextView.setText("");
-            showLoading("Getting your personalized analysis...");
+            showLoading("Getting your personalized analysis...\nYou can leave this page while waiting.");
             generateComment(true);
             retryButton.setVisibility(View.GONE);
         });
@@ -112,7 +112,7 @@ public class RewardFragment extends Fragment {
 
         CommentManager.setCommentRequestTimestamp(requireContext());
 
-        showLoading("Getting your personalized analysis...");
+        showLoading("Getting your personalized analysis...\nYou can leave this page while waiting.");
 
         PromptGenerator.getPromptAsync(requireContext(), prompt -> {
             Log.d(TAG, "Prompt ready:\n" + prompt);
