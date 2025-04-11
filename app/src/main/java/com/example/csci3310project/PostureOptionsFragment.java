@@ -208,7 +208,7 @@ public class PostureOptionsFragment extends Fragment {
     private void startPostureService() {
         Log.d("My_debug","startPostureService method started");
         Intent intent = new Intent(getActivity(), PostureService.class);
-        getActivity().startForegroundService(intent);
+        getActivity().startService(intent);
     }
 
     private void stopPostureService() {
