@@ -2,12 +2,20 @@ package com.example.csci3310project.screenTimeTracking.ui;
 
 import android.graphics.drawable.Drawable;
 
+import com.example.csci3310project.screenTimeTracking.domain.AppUtils;
+
 public class UsageStatUIModel {
     private final String packageName;
 
     private final String appName;
 
     private final Drawable appIcon;
+
+    public long getTotalMsInForeground() {
+        return totalMsInForeground;
+    }
+
+    private final long totalMsInForeground;
 
     private final String formattedTime;
 
@@ -17,7 +25,8 @@ public class UsageStatUIModel {
         this.packageName = packageName;
         this.appName = appName;
         this.appIcon = appIcon;
-        this.formattedTime = formatTime(totalMsInForeground);
+        this.totalMsInForeground = totalMsInForeground;
+        this.formattedTime = AppUtils.formatTime(totalMsInForeground);
         this.app_category = app_category;
     }
 
@@ -27,26 +36,6 @@ public class UsageStatUIModel {
 
     public Drawable getAppIcon() {
         return appIcon;
-    }
-
-    // use hours, minutes, seconds, omit the zero prefix.
-    // eg. 0 hour 0 minute 5 seconds -> 5 seconds, 0 hour 1 minute 5 seconds -> 1 minute 5 seconds
-    private String formatTime(long totalMsInForeground) {
-        long seconds = (totalMsInForeground / 1000) % 60;
-        long minutes = (totalMsInForeground / (1000 * 60)) % 60;
-        long hours = (totalMsInForeground / (1000 * 60 * 60)) % 24;
-
-        StringBuilder timeBuilder = new StringBuilder();
-        if (hours > 0) {
-            timeBuilder.append(hours).append(" hour ");
-        }
-        if (minutes > 0) {
-            timeBuilder.append(minutes).append(" minute ");
-        }
-        if (seconds > 0) {
-            timeBuilder.append(seconds).append(" seconds");
-        }
-        return timeBuilder.toString();
     }
 
     public String getFormattedTime() {
