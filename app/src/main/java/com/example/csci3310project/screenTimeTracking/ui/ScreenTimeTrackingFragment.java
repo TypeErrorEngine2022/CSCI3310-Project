@@ -68,7 +68,7 @@ public class ScreenTimeTrackingFragment extends Fragment {
     public void onResume() {
         super.onResume();
         // if user comes back from settings, check permissions again
-        checkPermissionsAndStartTracking();
+        requireView().post(this::checkPermissionsAndStartTracking);
     }
 
     private void checkPermissionsAndStartTracking() {
