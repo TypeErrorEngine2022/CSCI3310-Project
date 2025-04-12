@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
     implementation(project(":OpenCV"))
+    implementation(libs.activity)
 //    implementation(libs.litert.support.api)
 //    testImplementation(libs.junit)
 //    androidTestImplementation(libs.ext.junit)
