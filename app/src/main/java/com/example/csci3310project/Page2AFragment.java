@@ -1,22 +1,26 @@
 package com.example.csci3310project;
 
-import android.app.AlertDialog;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.csci3310project.TimeBreakUtils.AppUsageAdapter;
+import com.example.csci3310project.TimeBreakUtils.AppUsageData;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.usage.UsageEvents;
-import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.media.RingtoneManager;
-import android.net.Uri;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,17 +30,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import com.example.csci3310project.TimeBreakUtils.MonitoringService;
 import com.example.csci3310project.TimeBreakUtils.AppCategorizationUtils;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class Page2AFragment extends Fragment implements View.OnClickListener {
@@ -56,7 +53,15 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     private boolean isInBreak = false;
     private CountDownTimer breakTimer;
 
-    private boolean isEntertainmentApp(String packageName){
+
+    private RecyclerView appUsageRecyclerView;
+    private AppUsageAdapter appUsageAdapter;
+    private List<AppUsageData> appUsageList = new ArrayList<>();
+    private Map<String, Long> appUsageStartTimes = new HashMap<>();
+    private int updateCounter = 0;
+
+
+    private boolean isEntertainmentApp(String packageName) {
         return AppCategorizationUtils.isEntertainmentApp(packageName);
     }
 
@@ -64,13 +69,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         return AppCategorizationUtils.isProductivityApp(packageName);
     }
 
-    private String getAppType(String packageName) {
-        return AppCategorizationUtils.getAppType(packageName);
-    }
 
-
-
-    // Constructor with parent fragment
     public Page2AFragment() {
         // Required empty constructor
     }
@@ -83,17 +82,24 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.page2a, container, false);
         textView = view.findViewById(R.id.textView);
+        textView.setText("Let's Start!");
+
         button = view.findViewById(R.id.button);
         button.setOnClickListener(this);
 
-        usageStatsManager = (UsageStatsManager) getActivity().getSystemService(Context.USAGE_STATS_SERVICE);
 
+        appUsageRecyclerView = view.findViewById(R.id.appUsageRecyclerView);
+        appUsageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        appUsageAdapter = new AppUsageAdapter(appUsageList);
+        appUsageRecyclerView.setAdapter(appUsageAdapter);
+
+        usageStatsManager = (UsageStatsManager) getActivity().getSystemService(Context.USAGE_STATS_SERVICE);
         AppCategorizationUtils.initRepository(getActivity());
 
-        // Create notification channel
+
         createNotificationChannel();
 
-        // version check(only for Android 13 and above)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (getActivity().checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -124,7 +130,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             startMonitoring();
             button.setText("End");
 
-            // Notify parent to disable settings page
+
             if (parentFragment != null) {
                 parentFragment.setMonitoringActive(true);
             }
@@ -132,7 +138,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             stopMonitoring();
             button.setText("Start");
 
-            // Notify parent that monitoring has stopped
+
             if (parentFragment != null) {
                 parentFragment.setMonitoringActive(false);
             }
@@ -142,7 +148,14 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
     private void startMonitoring() {
         if (!isMonitoring) {
             isMonitoring = true;
-            textView.setText("Monitoring started...");
+            textView.setText("On monitoring ......");
+
+
+            appUsageList.clear();
+            appUsageStartTimes.clear();
+            appUsageAdapter.notifyDataSetChanged();
+            appUsageRecyclerView.setVisibility(View.VISIBLE);
+
 
             long entBreakDuration = parentFragment.getEntertainmentBreakDuration();
             long prodBreakDuration = parentFragment.getProductivityBreakDuration();
@@ -162,31 +175,32 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
 
 
             monitoringThread = new Thread(() -> {
-                int updateCounter = 0;
+                updateCounter = 0;
                 while (isMonitoring) {
                     try {
                         String foregroundApp = getCurrentForegroundApp();
                         updateCounter++;
 
-
                         if ((foregroundApp != null && !foregroundApp.equals(currentForegroundApp)) ||
                                 (updateCounter >= 5)) {
-
                             updateCounter = 0;
 
                             if (foregroundApp != null && !foregroundApp.equals(currentForegroundApp)) {
 
+                                if (currentForegroundApp != null && !currentForegroundApp.isEmpty()) {
+                                    long usageTime = System.currentTimeMillis() - appUsageStartTime;
+                                    updateAppUsage(currentForegroundApp, usageTime);
+                                }
+
                                 handleAppSwitch(foregroundApp);
+                            } else if (foregroundApp != null) {
 
+                                long currentUsageTime = System.currentTimeMillis() - appUsageStartTime;
+                                updateAppUsage(foregroundApp, currentUsageTime);
 
-                                currentForegroundApp = foregroundApp;
-                                appUsageStartTime = System.currentTimeMillis();
-                            }
-
-
-                            if (foregroundApp != null) {
 
                                 long workDuration = getWorkDurationForApp(foregroundApp);
+
 
                                 Intent updateIntent = new Intent(getActivity(), MonitoringService.class);
                                 updateIntent.setAction("UPDATE_NOTIFICATION");
@@ -197,9 +211,6 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                                 updateIntent.putExtra("entertainmentBreakDuration", parentFragment.getEntertainmentBreakDuration());
                                 updateIntent.putExtra("productivityBreakDuration", parentFragment.getProductivityBreakDuration());
                                 getActivity().startService(updateIntent);
-
-
-                                updateUI(foregroundApp);
 
 
                                 checkForBreakTime(foregroundApp);
@@ -226,7 +237,10 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                 breakTimer.cancel();
             }
             isInBreak = false;
-            textView.setText("Monitoring stopped");
+            textView.setText("Stop monitoring");
+
+
+            appUsageRecyclerView.setVisibility(View.GONE);
 
 
             Intent serviceIntent = new Intent(getActivity(), MonitoringService.class);
@@ -243,7 +257,6 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             UsageEvents usageEvents = usageStatsManager.queryEvents(beginTime, endTime);
             UsageEvents.Event event = new UsageEvents.Event();
 
-
             while (usageEvents.hasNextEvent()) {
                 usageEvents.getNextEvent(event);
 
@@ -254,7 +267,6 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                     currentApp = null;
                 }
             }
-
 
             if (currentApp != null && currentApp.equals(getActivity().getPackageName())) {
                 return null;
@@ -270,6 +282,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
 
         currentForegroundApp = newApp;
         appUsageStartTime = System.currentTimeMillis();
+        appUsageStartTimes.put(newApp, appUsageStartTime);
         isInBreak = false;
 
         if (breakTimer != null) {
@@ -285,39 +298,69 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         serviceIntent.putExtra("appType", AppCategorizationUtils.getAppType(newApp));
         serviceIntent.putExtra("startTime", appUsageStartTime);
         serviceIntent.putExtra("workDuration", (long)workDuration);
-
-
         serviceIntent.putExtra("entertainmentBreakDuration", parentFragment.getEntertainmentBreakDuration());
         serviceIntent.putExtra("productivityBreakDuration", parentFragment.getProductivityBreakDuration());
-
         getActivity().startService(serviceIntent);
+    }
 
-        getActivity().runOnUiThread(() -> {
-            textView.setText("Now using: " + AppCategorizationUtils.getAppName(getActivity(), newApp) +
-                    "\nType: " + AppCategorizationUtils.getAppType(newApp));
-        });
+
+    private void updateAppUsage(String packageName, long additionalTime) {
+        try {
+            PackageManager pm = getActivity().getPackageManager();
+            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+            Drawable icon = pm.getApplicationIcon(appInfo);
+            String appName = AppCategorizationUtils.getAppName(getActivity(), packageName);
+            String appType = AppCategorizationUtils.getAppType(packageName);
+
+
+            boolean found = false;
+            for (int i = 0; i < appUsageList.size(); i++) {
+                AppUsageData data = appUsageList.get(i);
+                if (data.getPackageName().equals(packageName)) {
+
+                    long totalUsage = data.getUsageDuration() + additionalTime;
+                    AppUsageData updatedData = new AppUsageData(
+                            packageName, icon, appName, appType, totalUsage, System.currentTimeMillis()
+                    );
+                    appUsageList.set(i, updatedData);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+
+                AppUsageData newData = new AppUsageData(
+                        packageName, icon, appName, appType, additionalTime, System.currentTimeMillis()
+                );
+                appUsageList.add(newData);
+            }
+
+
+            Collections.sort(appUsageList, (a, b) -> Long.compare(b.getLastUsed(), a.getLastUsed()));
+
+
+            getActivity().runOnUiThread(() -> {
+                appUsageAdapter.notifyDataSetChanged();
+            });
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Error getting app info", e);
+        }
     }
 
     private void checkForBreakTime(String packageName) {
-        Log.d(TAG, "checkForBreakTime: packageName=" + packageName + ", isInBreak=" + isInBreak);
-
         if (isInBreak || appUsageStartTime == 0) {
-            Log.d(TAG, "checkForBreakTime: Skipping - already in break or not tracking");
-            return; // Already in break or not tracking yet
+            return;
         }
 
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - appUsageStartTime;
-
-
         long workDuration = getWorkDurationForApp(packageName);
-
-        Log.d(TAG, "checkForBreakTime: elapsedTime=" + (elapsedTime/1000) + "s, workDuration=" +
-                (workDuration/1000) + "s, timeLeft=" + ((workDuration - elapsedTime)/1000) + "s");
 
         if (elapsedTime >= workDuration) {
             Log.d(TAG, "checkForBreakTime: TIME OUT! Starting break for " + packageName);
-            // Time to take a break
+
             startBreakTime(packageName);
         }
     }
@@ -326,32 +369,21 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         Log.d(TAG, "startBreakTime: Starting break for " + packageName);
         isInBreak = true;
 
-        // Get break duration based on app type
+
         final long breakDuration;
         if (parentFragment != null) {
             if (isEntertainmentApp(packageName)) {
                 breakDuration = parentFragment.getEntertainmentBreakDuration();
-                Log.d(TAG, "startBreakTime: Using entertainment break duration: " +
-                        (breakDuration/60000) + "min");
             } else if (isProductivityApp(packageName)) {
                 breakDuration = parentFragment.getProductivityBreakDuration();
-                Log.d(TAG, "startBreakTime: Using productivity break duration: " +
-                        (breakDuration/60000) + "min");
             } else {
-                // Default to entertainment settings for unknown apps
+
                 breakDuration = parentFragment.getEntertainmentBreakDuration();
-                Log.d(TAG, "startBreakTime: Using default (entertainment) break duration: " +
-                        (breakDuration/60000) + "min");
             }
         } else {
-            // Fallback to default values if parent is not available
-            breakDuration = 5 * 60 * 1000; // 5 minutes
+
+            breakDuration = 5 * 60 * 1000;
         }
-
-        Log.d(TAG, "startBreakTime: Break duration set to " + (breakDuration / 1000) + " seconds");
-
-        // Show notification
-        showBreakNotification(AppCategorizationUtils.getAppName(getActivity(), packageName), breakDuration);
 
 
         Intent breakIntent = new Intent(getActivity(), MonitoringService.class);
@@ -360,18 +392,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         breakIntent.putExtra("breakDuration", breakDuration);
         getActivity().startService(breakIntent);
 
-        // Show alert dialog
-        getActivity().runOnUiThread(() -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("Time for a break!")
-                    .setMessage("You've been using " + AppCategorizationUtils.getAppName(getActivity(), packageName) +
-                            " for too long. Take a break for " + (breakDuration / 60000) + " minutes.")
-                    .setPositiveButton("OK", null)
-                    .setCancelable(false)
-                    .show();
-        });
 
-        // Start break countdown timer
         breakTimer = new CountDownTimer(breakDuration, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -389,8 +410,7 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onFinish() {
                 isInBreak = false;
-                appUsageStartTime = System.currentTimeMillis(); // Reset usage timer
-
+                appUsageStartTime = System.currentTimeMillis();
 
                 Intent endBreakIntent = new Intent(getActivity(), MonitoringService.class);
                 endBreakIntent.setAction("END_BREAK");
@@ -400,17 +420,9 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
                 endBreakIntent.putExtra("workDuration", getWorkDurationForApp(packageName));
                 getActivity().startService(endBreakIntent);
 
-                // Notify user that break is over
-                getActivity().runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    builder.setTitle("Break finished")
-                            .setMessage("You can resume using " + AppCategorizationUtils.getAppName(getActivity(), packageName) + " now.")
-                            .setPositiveButton("OK", null)
-                            .setCancelable(false)
-                            .show();
 
-                    textView.setText("Now using: " + AppCategorizationUtils.getAppName(getActivity(), packageName) +
-                            "\nType: " + AppCategorizationUtils.getAppType(packageName));
+                getActivity().runOnUiThread(() -> {
+                    textView.setText("On monitoring ......");
                 });
             }
         };
@@ -418,84 +430,19 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
         breakTimer.start();
     }
 
-    private void updateUI(String packageName) {
-        if (isInBreak || packageName == null) {
-            return; // UI is handled by break timer
-        }
-
-        final long elapsedTime = System.currentTimeMillis() - appUsageStartTime;
-        final long workDuration = getWorkDurationForApp(packageName);
-        final long timeLeft = workDuration - elapsedTime;
-
-        if (timeLeft > 0) {
-            final String timeLeftStr = String.format("%02d:%02d",
-                    TimeUnit.MILLISECONDS.toMinutes(timeLeft),
-                    TimeUnit.MILLISECONDS.toSeconds(timeLeft) -
-                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeLeft))
-            );
-
-            getActivity().runOnUiThread(() -> {
-                textView.setText("Now using: " + AppCategorizationUtils.getAppName(getActivity(), packageName) +
-                        "\nType: " + AppCategorizationUtils.getAppType(packageName) +
-                        "\nTime until break: " + timeLeftStr);
-            });
-        }
-    }
-
     private long getWorkDurationForApp(String packageName) {
-        Log.d(TAG, "getWorkDurationForApp: Enter!");
-        final long duration;
         if (parentFragment != null) {
             if (isEntertainmentApp(packageName)) {
-
                 return parentFragment.getEntertainmentWorkDuration();
-
             } else if (isProductivityApp(packageName)) {
                 return parentFragment.getProductivityWorkDuration();
             } else {
-                // Default to entertainment settings for unknown apps
+
                 return parentFragment.getEntertainmentWorkDuration();
             }
         }
-        // Fallback values
-        return 30 * 60 * 1000; // 30 minutes
-    }
 
-
-//    private String getAppName(String packageName) {
-//        PackageManager packageManager = getActivity().getPackageManager();
-//        try {
-//            ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
-//            return packageManager.getApplicationLabel(appInfo).toString();
-//        } catch (PackageManager.NameNotFoundException e) {
-//            return packageName;
-//        }
-//    }
-
-    private void showBreakNotification(String appName, long breakDuration) {
-        // permission check 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                getActivity().checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                        != PackageManager.PERMISSION_GRANTED) {
-            return; // if no permission, do not show notification
-        }
-
-        NotificationManager notificationManager =
-                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-
-        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity(), CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("Take a break!")
-                .setContentText("You have used " + appName + " too long, take a braek for " +
-                        (breakDuration / 60000) + "min please!")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setSound(soundUri)
-                .setVibrate(new long[]{0, 500, 1000})
-                .setAutoCancel(true);
-
-        notificationManager.notify(1, builder.build());
+        return 30 * 60 * 1000; // 30 分鐘
     }
 
     private void createNotificationChannel() {
@@ -511,43 +458,4 @@ public class Page2AFragment extends Fragment implements View.OnClickListener {
             notificationManager.createNotificationChannel(channel);
         }
     }
-
-
-    private android.content.BroadcastReceiver timeoutReceiver = new android.content.BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String packageName = intent.getStringExtra("packageName");
-            Log.d(TAG, "Received timeout broadcast for: " + packageName);
-
-            if (!isInBreak && packageName != null) {
-                startBreakTime(packageName);
-            }
-        }
-    };
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-
-            getActivity().registerReceiver(
-                    timeoutReceiver,
-                    new android.content.IntentFilter("com.example.csci3310project.TIMEOUT_ACTION"),
-                    Context.RECEIVER_NOT_EXPORTED
-            );
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        try {
-            getActivity().unregisterReceiver(timeoutReceiver);
-        } catch (IllegalArgumentException e) {
-
-        }
-    }
-
 }
