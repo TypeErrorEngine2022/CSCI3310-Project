@@ -1,4 +1,6 @@
 # CSCI3310 Project - Group 1
+
+Please find the report in ![Final_Report.pdf](Final_Report.pdf)
  
 ## Setup Pre-requisites
 
